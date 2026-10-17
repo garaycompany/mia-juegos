@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071a2f">
+<title>El cuaderno helado de Mia</title>
+<style>
+  :root{
+    --noche:#071a2f;
+    --hielo:#0e2b49;
+    --hielo2:#14395f;
+    --brillo:#8fe3ff;
+    --aurora:#7ef0c9;
+    --malva:#c9a7ff;
+    --nieve:#f2f8ff;
+    --papel:#fdf8ec;
+    --tinta:#2b3a4a;
+    --sol:#ffd479;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--noche);color:var(--nieve);
+    font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 15% -5%, rgba(126,240,201,.16), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(201,167,255,.14), transparent 60%),
+      linear-gradient(180deg,#071a2f 0%, #0b2340 55%, #103055 100%);
+    background-attachment:fixed;
+  }
+  #app{max-width:560px;margin:0 auto;padding:18px 16px 40px;}
+  h1,h2,h3{margin:0 0 10px; font-weight:700; letter-spacing:.5px;}
+  h1{font-size:30px; line-height:1.15;}
+  h2{font-size:23px;}
+  p{font-size:19px; line-height:1.5; margin:0 0 14px; max-width:34em;}
+  .sub{color:var(--brillo); font-size:16px;}
+  button{font-family:inherit;}
+  .btn{
+    display:block; width:100%; min-height:58px; margin:10px 0;
+    border:none; border-radius:16px; padding:16px 18px;
+    font-size:20px; font-weight:700; color:#062033;
+    background:linear-gradient(180deg,#bff0ff,#7fd6f7);
+    box-shadow:0 6px 0 #3d8fb5; cursor:pointer;
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 #3d8fb5;}
+  .btn.sec{background:linear-gradient(180deg,#22507d,#183f66); color:var(--nieve); box-shadow:0 6px 0 #0c2743;}
+  .btn.ghost{background:transparent; color:var(--brillo); box-shadow:none; border:2px solid #2f5f8c; min-height:48px; font-size:17px;}
+  .btn:focus-visible{outline:3px solid var(--sol); outline-offset:3px;}
+  .fila{display:flex; gap:10px; align-items:center;}
+  .fila .btn{margin:10px 0;}
+  .tarjeta{
+    background:linear-gradient(180deg, rgba(20,57,95,.95), rgba(11,35,62,.95));
+    border:1px solid #2b5a86; border-radius:20px; padding:18px; margin:14px 0;
+  }
+  .globo{
+    position:relative; background:var(--papel); color:var(--tinta);
+    border-radius:18px; padding:16px 18px; font-size:19px; line-height:1.45;
+  }
+  .globo:after{content:""; position:absolute; left:26px; bottom:-12px; border:12px solid transparent; border-top-color:var(--papel); border-bottom:0;}
+  .quien{display:flex; align-items:flex-end; gap:12px; margin:6px 0 18px;}
+  .quien .cara{width:74px; height:74px; flex:0 0 74px;}
+  .quien .dice{flex:1;}
+  .nombre{font-size:15px; color:var(--brillo); margin:8px 0 0 6px;}
+  .modelo{background:var(--papel); border-radius:18px; padding:12px; margin:12px 0;
+    box-shadow:inset 0 0 0 3px #e6dcc4;}
+  .modelo svg{display:block; width:100%; height:auto;}
+  .paso{display:flex; gap:12px; align-items:flex-start; margin:12px 0; font-size:19px; line-height:1.45;}
+  .num{flex:0 0 34px; height:34px; border-radius:50%; background:var(--brillo); color:#062033;
+    font-weight:800; display:flex; align-items:center; justify-content:center; font-size:18px;}
+  .mats{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px;}
+  .mat{background:#12395f; border:1px solid #2f6d9e; border-radius:999px; padding:8px 14px; font-size:16px;}
+  .barra{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .copos{font-size:18px; color:var(--sol);}
+  .op{display:block; width:100%; text-align:left; min-height:56px; margin:9px 0;
+    background:#14395f; color:var(--nieve); border:2px solid #2f6d9e; border-radius:14px;
+    padding:14px 16px; font-size:20px; cursor:pointer;}
+  .op:active{background:#1c4c7a;}
+  .op.bien{background:#1c6b52; border-color:var(--aurora);}
+  .op.mal{background:#6b2b3a; border-color:#ff9db0;}
+  .op:focus-visible{outline:3px solid var(--sol); outline-offset:2px;}
+  .marca{display:flex; gap:12px; align-items:center; width:100%; text-align:left;
+    background:#14395f; color:var(--nieve); border:2px solid #2f6d9e; border-radius:14px;
+    padding:14px 16px; font-size:18px; margin:9px 0; cursor:pointer; min-height:56px;}
+  .caja{flex:0 0 30px; height:30px; border-radius:8px; border:2px solid var(--brillo); display:flex;
+    align-items:center; justify-content:center; font-size:20px; color:#062033;}
+  .marca.si .caja{background:var(--aurora);}
+  .aviso{background:#123a5e; border-left:5px solid var(--brillo); border-radius:0 12px 12px 0;
+    padding:12px 14px; font-size:18px; line-height:1.45; margin:12px 0;}
+  .lista-mis{margin:0; padding:0; list-style:none;}
+  .mis{display:flex; gap:12px; align-items:center; width:100%; text-align:left; margin:10px 0;
+    background:linear-gradient(180deg,#173f66,#102e4e); border:1px solid #2f6d9e; color:var(--nieve);
+    border-radius:16px; padding:14px; font-size:18px; cursor:pointer; min-height:64px;}
+  .mis .ins{flex:0 0 40px; height:40px; border-radius:12px; background:#0a2440; display:flex;
+    align-items:center; justify-content:center; font-size:20px;}
+  .mis.hecha{border-color:var(--aurora);}
+  .pie{margin-top:26px; text-align:center; color:#6f9dc4; font-size:14px;}
+  .ref-top{position:sticky; top:0; z-index:5; background:rgba(7,26,47,.92); padding:8px 0 10px;
+    backdrop-filter:blur(4px);}
+  .grande{font-size:22px;}
+  .oculto{display:none;}
+  /* ====== HORIZONTAL (Echo Show, tablets acostadas) ====== */
+  @media (orientation:landscape){
+    #app{max-width:1100px;padding:14px 24px 28px}
+    p{max-width:none}
+    .rutas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .lista-mis{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}
+    .lista-mis .mis{height:calc(100% - 20px)}
+    .dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+    .dos .izq{position:sticky;top:8px}
+    .dos .modelo svg{max-height:calc(100vh - 150px);max-height:calc(100dvh - 150px);margin:0 auto}
+    .ops{display:grid;grid-template-columns:1fr 1fr;column-gap:12px}
+  }
+  /* Pantallas bajas: Echo Show 5 (960 x 480) */
+  @media (orientation:landscape) and (max-height:620px){
+    h1{font-size:26px} h2{font-size:20px}
+    p,.paso,.globo,.aviso{font-size:17px}
+    .btn{min-height:50px;padding:11px 16px;font-size:18px;margin:8px 0}
+    .op,.marca{min-height:50px;padding:10px 14px;font-size:18px;margin:7px 0}
+    .tarjeta{padding:14px;margin:10px 0}
+    .quien .cara{width:60px;height:60px;flex-basis:60px}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .aparece{animation:sube .28s ease-out;}
+    @keyframes sube{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/*==DATOS_INICIO==*/
+const MESES = [
+  {n:1,  n1:"enero",      dias:31},
+  {n:2,  n1:"febrero",    dias:28},
+  {n:3,  n1:"marzo",      dias:31},
+  {n:4,  n1:"abril",      dias:30},
+  {n:5,  n1:"mayo",       dias:31},
+  {n:6,  n1:"junio",      dias:30},
+  {n:7,  n1:"julio",      dias:31},
+  {n:8,  n1:"agosto",     dias:31},
+  {n:9,  n1:"septiembre", dias:30},
+  {n:10, n1:"octubre",    dias:31},
+  {n:11, n1:"noviembre",  dias:30},
+  {n:12, n1:"diciembre",  dias:31}
+];
+
+const MISIONES = [
+/* ---------------- RUTA 1: LOS MESES DEL AÑO ---------------- */
+{
+  id:"A1", ruta:"anio", personaje:"aura",
+  titulo:"La lista de los doce meses",
+  meta:"Escribir los 12 meses en orden, numerados del 1 al 12.",
+  saludo:"El año del reino tiene doce meses y siempre pasan en el mismo orden. Hoy los vas a escribir en tu cuaderno, del uno al doce.",
+  materiales:["Cuaderno","Lápiz"],
+  modelo:"lista",
+  modeloPasos:[
+    "Mira la lista. Cada mes tiene su número: el uno es enero y el doce es diciembre.",
+    "Escribe el número, un punto y después el nombre del mes. Así: uno, punto, enero.",
+    "Los meses siempre van en este orden. Después de diciembre vuelve a empezar enero."
+  ],
+  instrucciones:[
+    "Escribe arriba de la página: Los meses del año.",
+    "Escribe los números del 1 al 12, uno debajo del otro.",
+    "Al lado de cada número escribe el mes que le toca. Puedes mirar el modelo del móvil cuando quieras.",
+    "Cuando termines, lee tu lista en voz alta."
+  ],
+  preguntas:[
+    {q:"Mira tu cuaderno. ¿Qué mes escribiste en el número 7?",
+     ops:["junio","julio","agosto","septiembre"], ok:1,
+     bien:"Contaste desde enero hasta llegar al siete. Ese es el método.",
+     pista:"Cuenta con el dedo desde enero: uno, dos, tres… hasta el siete."},
+    {q:"En tu lista, ¿al lado de qué número escribiste octubre?",
+     ops:["8","9","10","11"], ok:2,
+     bien:"Buscaste el mes primero y después leíste su número. Muy buen orden.",
+     pista:"Busca octubre en tu hoja y mira el número que le pusiste delante."},
+    {q:"¿Cuál es el último mes de tu lista?",
+     ops:["noviembre","diciembre","enero","doce"], ok:1,
+     bien:"Miraste el final de tu lista para responder.",
+     pista:"Mira la última línea que escribiste, la del número 12."}
+  ],
+  checklist:[
+    "Escribí los 12 meses.",
+    "Empecé por enero y terminé en diciembre.",
+    "Cada mes tiene su número delante."
+  ],
+  cierre:"Tu lista queda guardada en el cuaderno. La vas a usar en las próximas misiones, así que no arranques la hoja."
+},
+{
+  id:"A2", ruta:"anio", personaje:"elina",
+  titulo:"La rueda del año",
+  meta:"Dibujar un círculo partido en 12 y escribir un mes en cada parte.",
+  saludo:"El año no es una línea que se acaba: es una rueda que da vueltas. Vas a dibujarla en tu cuaderno.",
+  materiales:["Cuaderno","Lápiz","Algo redondo para calcar (un vaso)"],
+  modelo:"rueda",
+  modeloPasos:[
+    "Primero un círculo grande. Puedes calcar el borde de un vaso.",
+    "Traza una raya de arriba abajo y otra de lado a lado. Ya tienes cuatro partes.",
+    "Parte cada una de esas cuatro en tres. Al final tienes doce casillas iguales.",
+    "Escribe enero arriba del todo y sigue hacia la derecha hasta diciembre."
+  ],
+  instrucciones:[
+    "Dibuja un círculo grande, del tamaño de tu mano.",
+    "Divídelo en 12 casillas, como el modelo del móvil.",
+    "Escribe enero en la casilla de arriba.",
+    "Sigue hacia la derecha: febrero, marzo… hasta diciembre.",
+    "Fíjate en algo: diciembre queda pegado a enero otra vez."
+  ],
+  preguntas:[
+    {q:"En tu rueda, ¿qué mes está justo después de abril?",
+     ops:["marzo","mayo","junio","agosto"], ok:1,
+     bien:"Pusiste el dedo en abril y avanzaste una casilla.",
+     pista:"Busca abril en la rueda y mira la casilla siguiente hacia la derecha."},
+    {q:"En tu rueda, ¿qué mes está justo antes de enero?",
+     ops:["febrero","noviembre","diciembre","ninguno, enero es el primero"], ok:2,
+     bien:"Viste que la rueda da la vuelta entera y no tiene final.",
+     pista:"Sigue la rueda hacia atrás desde enero. La casilla anterior es la última que escribiste."},
+    {q:"¿Cuántas casillas tiene tu rueda del año?",
+     ops:["10","11","12","24"], ok:2,
+     bien:"Contaste las casillas de tu propio dibujo.",
+     pista:"Cuenta las casillas una por una, tocándolas con el dedo."}
+  ],
+  checklist:[
+    "Mi círculo está partido en 12 casillas.",
+    "Escribí un mes en cada casilla, sin repetir ninguno.",
+    "Diciembre quedó al lado de enero."
+  ],
+  cierre:"Esta rueda la vas a usar otra vez. En la misión de las estaciones la vas a pintar de colores."
+},
+{
+  id:"A3", ruta:"anio", personaje:"copito",
+  titulo:"Cuatro estaciones, tres meses cada una",
+  meta:"Pintar la rueda del año en cuatro grupos de tres meses.",
+  saludo:"El año se puede repartir en cuatro partes iguales. Cada parte tiene tres meses y en el reino le llamamos estación.",
+  materiales:["Tu rueda del año","Cuatro colores distintos"],
+  modelo:"estaciones",
+  modeloPasos:[
+    "Cuenta tres meses y píntalos del mismo color.",
+    "Los tres siguientes, de otro color. Y así hasta dar la vuelta.",
+    "Al final tienes cuatro colores y cada uno ocupa tres casillas."
+  ],
+  instrucciones:[
+    "Vuelve a la página de tu rueda del año.",
+    "Pinta suave enero, febrero y marzo del mismo color.",
+    "Pinta abril, mayo y junio de otro color.",
+    "Sigue con julio, agosto y septiembre, y después con octubre, noviembre y diciembre.",
+    "Debajo de la rueda escribe: cada color son 3 meses de 12."
+  ],
+  preguntas:[
+    {q:"¿Cuántos meses pintaste de cada color?",
+     ops:["2","3","4","6"], ok:1,
+     bien:"Contaste las casillas de un color en tu dibujo.",
+     pista:"Elige un color de tu rueda y cuenta sus casillas."},
+    {q:"Tres meses de doce. ¿Qué parte del año es un color?",
+     ops:["la mitad","la cuarta parte","la tercera parte","todo el año"], ok:1,
+     bien:"Usaste los cuatro colores para ver que el año quedó en cuatro partes iguales.",
+     pista:"Cuenta cuántos colores hay en tu rueda. El año quedó partido en ese número de partes iguales."},
+    {q:"Con dos colores juntos, ¿cuántos meses tienes?",
+     ops:["4","5","6","8"], ok:2,
+     bien:"Sumaste tres y tres mirando el dibujo.",
+     pista:"Elige dos colores de tu rueda y cuenta todas sus casillas: 3 y 3 más."}
+  ],
+  checklist:[
+    "Usé cuatro colores distintos.",
+    "Cada color ocupa exactamente 3 casillas.",
+    "No quedó ninguna casilla sin pintar."
+  ],
+  cierre:"Acabas de partir el año en cuatro partes iguales. Eso también son fracciones: en la otra ruta las vas a dibujar."
+},
+{
+  id:"A4", ruta:"anio", personaje:"kristo",
+  titulo:"Los días de cada mes",
+  meta:"Escribir una tabla con los días que tiene cada mes.",
+  saludo:"Para cargar el trineo necesito saber cuántos días dura cada mes. No todos duran lo mismo, y hay un truco con los nudillos de la mano.",
+  materiales:["Cuaderno","Lápiz","Tu mano cerrada"],
+  modelo:"nudillos",
+  modeloPasos:[
+    "Cierra el puño y mira los nudillos y los huecos entre ellos.",
+    "Empieza en el primer nudillo: enero. El hueco de al lado: febrero. El siguiente nudillo: marzo.",
+    "Los meses que caen en nudillo tienen 31 días. Los que caen en hueco tienen 30, menos febrero, que tiene 28.",
+    "Cuando llegues al último nudillo con julio, vuelve a empezar por el primero con agosto."
+  ],
+  instrucciones:[
+    "Haz dos columnas: mes y días.",
+    "Escribe los 12 meses en la primera columna.",
+    "Usa los nudillos y escribe al lado 31, 30 o 28.",
+    "Rodea con un círculo los meses de 31 días.",
+    "Cuenta cuántos rodeaste y escríbelo abajo."
+  ],
+  preguntas:[
+    {q:"Mira tu tabla. ¿Cuántos días tiene noviembre?",
+     ops:["28","29","30","31"], ok:2,
+     bien:"Buscaste el mes en tu tabla en vez de adivinar.",
+     pista:"Busca noviembre en tu columna y lee el número de al lado."},
+    {q:"¿Qué mes escribiste con 28 días?",
+     ops:["enero","febrero","junio","diciembre"], ok:1,
+     bien:"Solo hay un mes distinto a los demás y lo encontraste.",
+     pista:"Busca en tu tabla el número más pequeño y mira de qué mes es."},
+    {q:"¿Cuántos meses rodeaste con 31 días?",
+     ops:["5","6","7","8"], ok:2,
+     bien:"Contaste tus propios círculos.",
+     pista:"Cuenta en tu tabla los círculos que hiciste, uno por uno."}
+  ],
+  checklist:[
+    "Mi tabla tiene los 12 meses.",
+    "Cada mes tiene su número de días al lado.",
+    "Rodeé los meses de 31 días."
+  ],
+  cierre:"Si sumas todos los días de tu tabla te sale el año entero: 365. Puedes intentarlo otro día con la calculadora."
+},
+{
+  id:"A5", ruta:"anio", personaje:"elina",
+  titulo:"El calendario de las fiestas",
+  meta:"Colocar cuatro fiestas del reino en la rueda del año.",
+  saludo:"Te voy a decir cuándo son las fiestas del reino, pero no te voy a decir el mes. Tendrás que averiguarlo con tu rueda.",
+  materiales:["Tu rueda del año","Lápiz"],
+  modelo:"pistas",
+  modeloPasos:[
+    "Lee cada pista y busca el mes en tu rueda con el dedo.",
+    "Cuando lo encuentres, escribe el nombre de la fiesta pequeñito dentro de esa casilla.",
+    "Si una pista dice después, avanza hacia la derecha. Si dice antes, ve hacia atrás."
+  ],
+  instrucciones:[
+    "Fiesta del hielo: es el tercer mes del año.",
+    "Carrera de renos: dos meses después de julio.",
+    "Noche de faroles: el mes que va justo antes de diciembre.",
+    "Día del deshielo: el sexto mes del año.",
+    "Escribe cada fiesta dentro de la casilla del mes que le toca."
+  ],
+  preguntas:[
+    {q:"¿En qué casilla escribiste la fiesta del hielo?",
+     ops:["febrero","marzo","abril","mayo"], ok:1,
+     bien:"Contaste desde enero hasta el tercer mes.",
+     pista:"Cuenta en la rueda: enero es el primero, febrero el segundo…"},
+    {q:"¿Y la carrera de renos?",
+     ops:["agosto","septiembre","octubre","junio"], ok:1,
+     bien:"Avanzaste dos casillas desde julio, sin saltarte ninguna.",
+     pista:"Pon el dedo en julio, en tu rueda, y avanza dos casillas hacia la derecha."},
+    {q:"¿En qué mes quedó la noche de faroles?",
+     ops:["octubre","noviembre","diciembre","enero"], ok:1,
+     bien:"Buscaste diciembre y retrocediste una casilla.",
+     pista:"Busca diciembre en tu rueda y mira la casilla de antes."}
+  ],
+  checklist:[
+    "Las cuatro fiestas están dentro de una casilla.",
+    "No puse dos fiestas en el mismo mes.",
+    "Escribí también el mes de mi cumpleaños en la rueda."
+  ],
+  cierre:"Tu rueda ya es un calendario de verdad: sirve para saber qué viene antes y qué viene después."
+},
+{
+  id:"A6", ruta:"anio", personaje:"copito",
+  titulo:"Meses revueltos",
+  meta:"Ordenar meses desordenados y contar cuántos hay de uno a otro.",
+  saludo:"El viento me revolvió los carteles de los meses y ahora están todos mezclados. Ordénalos en tu cuaderno.",
+  materiales:["Cuaderno","Lápiz","Tu rueda del año para consultar"],
+  modelo:"revueltos",
+  modeloPasos:[
+    "Copia los seis meses revueltos en tu cuaderno, tal como están.",
+    "Busca cuál va primero en el año y escríbelo abajo en una lista nueva.",
+    "Sigue buscando el siguiente hasta terminar los seis.",
+    "Para contar cuántos meses hay de uno a otro, avanza por la rueda contando los saltos."
+  ],
+  instrucciones:[
+    "Copia estos seis: octubre, marzo, julio, enero, diciembre, mayo.",
+    "Debajo, escríbelos ordenados como van en el año.",
+    "Después escribe: de marzo a julio hay ___ meses.",
+    "Cuenta los saltos en tu rueda para completar la frase."
+  ],
+  preguntas:[
+    {q:"En tu lista ordenada, ¿cuál escribiste primero?",
+     ops:["marzo","enero","octubre","diciembre"], ok:1,
+     bien:"Buscaste el que va antes en el año, no el que estaba antes en la hoja.",
+     pista:"Mira los seis meses y busca cuál está más cerca del principio del año."},
+    {q:"De marzo a julio, ¿cuántos meses hay que avanzar?",
+     ops:["3","4","5","7"], ok:1,
+     bien:"Contaste los saltos y no las casillas. Ese es el truco.",
+     pista:"Pon el dedo en marzo, en tu rueda, y cuenta cada salto: abril uno, mayo dos…"},
+    {q:"Si estamos en octubre, ¿qué mes será dentro de 3 meses?",
+     ops:["diciembre","enero","febrero","julio"], ok:1,
+     bien:"Diste la vuelta a la rueda al pasar diciembre.",
+     pista:"Avanza tres casillas en tu rueda desde octubre. Recuerda que después de diciembre viene enero."}
+  ],
+  checklist:[
+    "Escribí los seis meses ordenados.",
+    "Completé la frase de marzo a julio.",
+    "Conté avanzando por la rueda, no de memoria."
+  ],
+  cierre:"Ya sabes ordenar meses y contar de uno a otro. Eso es lo que hace un calendario."
+},
+
+/* ---------------- RUTA 2: FRACCIONES ---------------- */
+{
+  id:"B1", ruta:"fracciones", personaje:"elina",
+  titulo:"Partes iguales o partes tramposas",
+  meta:"Dibujar cuatro figuras partidas y decidir cuáles están en partes iguales.",
+  saludo:"Antes de partir el hielo hay una regla: las partes tienen que ser iguales. Si no, no vale llamarlas mitades.",
+  materiales:["Cuaderno","Lápiz","Regla o el borde del cuaderno"],
+  modelo:"iguales",
+  modeloPasos:[
+    "Mira las cuatro figuras. Todas están partidas en dos trozos.",
+    "En dos de ellas los trozos son del mismo tamaño. En las otras dos, uno es más grande.",
+    "Solo cuando las partes son iguales podemos decir mitades."
+  ],
+  instrucciones:[
+    "Copia las cuatro figuras del modelo, una al lado de otra.",
+    "Copia también la raya que tiene cada una dentro.",
+    "Debajo de las que tienen partes iguales escribe: sí.",
+    "Debajo de las otras escribe: no."
+  ],
+  preguntas:[
+    {q:"La figura 2, la del cuadrado con la raya torcida, ¿está partida en partes iguales?",
+     ops:["Sí, son dos trozos","No, un trozo es más grande"], ok:1,
+     bien:"Comparaste el tamaño de los trozos, no solo cuántos había.",
+     pista:"Mira la figura 2 de tu cuaderno: ¿te cabría el mismo hielo en los dos trozos?"},
+    {q:"¿Cuántas de tus cuatro figuras tienen partes iguales?",
+     ops:["1","2","3","4"], ok:1,
+     bien:"Revisaste tus cuatro dibujos uno por uno.",
+     pista:"Cuenta en tu hoja los sí que escribiste."},
+    {q:"Para que un trozo sea una mitad, ¿qué tiene que pasar?",
+     ops:["Que haya dos trozos","Que los dos trozos sean iguales","Que sea el trozo grande"], ok:1,
+     bien:"Esa es la regla que vas a usar en todas las misiones.",
+     pista:"Vuelve a mirar en tu hoja la figura de la raya torcida. Tenía dos trozos, pero no valía."}
+  ],
+  checklist:[
+    "Dibujé las cuatro figuras con su raya.",
+    "Escribí sí o no debajo de cada una.",
+    "Comprobé el tamaño de los trozos antes de decidir."
+  ],
+  cierre:"Regla del reino: partes iguales. Sin eso, no hay fracciones."
+},
+{
+  id:"B2", ruta:"fracciones", personaje:"copito",
+  titulo:"La mitad de todo",
+  meta:"Partir tres figuras por la mitad y pintar una parte de cada una.",
+  saludo:"Me encanta la mitad de todo: media zanahoria, medio pastel. Hoy vas a partir tres figuras por la mitad.",
+  materiales:["Cuaderno","Lápiz","Un color"],
+  modelo:"mitades",
+  modeloPasos:[
+    "Un rectángulo se puede partir por la mitad con una raya de arriba abajo.",
+    "El mismo rectángulo también se parte por la mitad con una raya de lado a lado. Las dos formas valen.",
+    "Cuando pintas una de las dos partes iguales, has pintado un medio. Se escribe 1 arriba y 2 abajo."
+  ],
+  instrucciones:[
+    "Dibuja un rectángulo, un cuadrado y un círculo, bien grandes.",
+    "Parte cada uno por la mitad con una raya.",
+    "Pinta una de las dos partes de cada figura.",
+    "Escribe debajo de cada figura la fracción: 1 arriba, una rayita y 2 abajo.",
+    "Prueba a partir el cuadrado por la mitad de otra forma distinta."
+  ],
+  preguntas:[
+    {q:"Pintaste 1 parte de 2 partes iguales. ¿Cómo se escribe esa fracción?",
+     ops:["2/1","1/2","1 y 2","2 y 2"], ok:1,
+     bien:"Pusiste abajo el total de partes y arriba las pintadas.",
+     pista:"Arriba va lo que pintaste: una parte. Abajo va en cuántas partes quedó: dos."},
+    {q:"¿De cuántas formas distintas puedes partir un cuadrado por la mitad?",
+     ops:["Solo de una","De más de una"], ok:1,
+     bien:"Probaste otra raya en vez de quedarte con la primera idea.",
+     pista:"Prueba en tu cuaderno: una raya de arriba abajo, otra de lado a lado, otra de esquina a esquina."},
+    {q:"Si pintas las dos partes del círculo, ¿cuánto has pintado?",
+     ops:["1/2","el círculo entero","nada"], ok:1,
+     bien:"Dos partes de dos es todo. Lo viste en tu dibujo.",
+     pista:"Mira tu círculo del cuaderno. Si pintas las dos mitades, no queda nada sin pintar."}
+  ],
+  checklist:[
+    "Mis tres figuras están partidas en dos partes iguales.",
+    "Pinté solo una parte de cada figura.",
+    "Escribí 1/2 debajo de cada una."
+  ],
+  cierre:"Un medio no es un tamaño fijo: la mitad del círculo pequeño es más pequeña que la mitad del grande."
+},
+{
+  id:"B3", ruta:"fracciones", personaje:"kristo",
+  titulo:"Tercios y cuartos",
+  meta:"Partir barras iguales en 3 y en 4 partes, y comparar el tamaño.",
+  saludo:"Tengo que repartir la misma tarta de hielo entre tres o entre cuatro. Dibuja las dos y mira qué pasa.",
+  materiales:["Cuaderno","Lápiz","Regla","Dos colores"],
+  modelo:"terciosycuartos",
+  modeloPasos:[
+    "Dibuja dos barras del mismo largo, una debajo de la otra. Que midan lo mismo es importante.",
+    "Parte la primera en 3 partes iguales. Cada parte es un tercio.",
+    "Parte la segunda en 4 partes iguales. Cada parte es un cuarto.",
+    "Pinta una parte de cada barra y compáralas mirando cuál es más ancha."
+  ],
+  instrucciones:[
+    "Dibuja dos barras iguales, de unos 12 centímetros.",
+    "Parte la de arriba en 3 partes iguales y la de abajo en 4.",
+    "Pinta una sola parte de cada barra.",
+    "Escribe 1/3 debajo de la primera y 1/4 debajo de la segunda.",
+    "Rodea la parte pintada que sea más grande."
+  ],
+  preguntas:[
+    {q:"En tus barras, ¿qué parte pintada es más grande?",
+     ops:["1/3","1/4","Son iguales"], ok:0,
+     bien:"Comparaste mirando tu dibujo, que es la forma segura.",
+     pista:"Pon el dedo encima de cada parte pintada. ¿Cuál es más ancha?"},
+    {q:"Si parto la misma barra en más partes, cada parte queda…",
+     ops:["más grande","más pequeña","igual"], ok:1,
+     bien:"Esta es la idea más importante de las fracciones y la sacaste de tu dibujo.",
+     pista:"Mira tus dos barras: cuatro partes tienen que caber en el mismo largo que tres. Así que cada una es…"},
+    {q:"¿Cuántos cuartos hacen falta para llenar la barra entera?",
+     ops:["2","3","4","8"], ok:2,
+     bien:"Contaste las partes de tu propia barra.",
+     pista:"Cuenta las partes de tu barra de abajo."}
+  ],
+  checklist:[
+    "Mis dos barras miden lo mismo.",
+    "Una está en 3 partes iguales y la otra en 4.",
+    "Escribí 1/3 y 1/4 debajo."
+  ],
+  cierre:"Cuidado con la trampa: el 4 es mayor que el 3, pero un cuarto es menor que un tercio."
+},
+{
+  id:"B4", ruta:"fracciones", personaje:"elina",
+  titulo:"Qué dice cada número",
+  meta:"Escribir fracciones mirando cuántas partes hay y cuántas están pintadas.",
+  saludo:"Una fracción tiene dos números y cada uno cuenta una cosa distinta. El de abajo cuenta las partes en total. El de arriba, las que tomas.",
+  materiales:["Cuaderno","Lápiz","Un color"],
+  modelo:"escribir",
+  modeloPasos:[
+    "El número de abajo dice en cuántas partes iguales se partió la figura.",
+    "El número de arriba dice cuántas de esas partes pintaste.",
+    "Aquí hay 5 partes iguales y 3 pintadas: se escribe 3 arriba y 5 abajo."
+  ],
+  instrucciones:[
+    "Dibuja cuatro barras largas, una debajo de otra.",
+    "Parte la primera en 4 partes y pinta 3.",
+    "Parte la segunda en 5 partes y pinta 2.",
+    "Parte la tercera en 6 partes y pinta 6.",
+    "Parte la cuarta en 3 partes y pinta 1.",
+    "Escribe la fracción debajo de cada barra."
+  ],
+  preguntas:[
+    {q:"En tu primera barra pintaste 3 de 4 partes. ¿Qué fracción escribiste?",
+     ops:["4/3","3/4","1/4","3/7"], ok:1,
+     bien:"Pintadas arriba, total abajo. Lo hiciste en ese orden.",
+     pista:"Arriba van las partes pintadas. Abajo, todas las partes de la barra."},
+    {q:"En la segunda barra, ¿qué número escribiste abajo?",
+     ops:["2","3","5","7"], ok:2,
+     bien:"El de abajo cuenta todas las partes, pintadas y sin pintar.",
+     pista:"Cuenta todas las partes de esa barra, también las que dejaste en blanco."},
+    {q:"La tercera barra está pintada entera: 6 de 6. Eso es…",
+     ops:["media barra","la barra entera","seis barras"], ok:1,
+     bien:"Viste que cuando arriba y abajo son iguales, está todo.",
+     pista:"Mira tu tercera barra: ¿queda algún trozo sin pintar?"}
+  ],
+  checklist:[
+    "Cada barra tiene sus partes iguales.",
+    "Pinté el número de partes que decía la instrucción.",
+    "Escribí las cuatro fracciones."
+  ],
+  cierre:"Ya sabes leer una fracción como una instrucción: parte en tantas, toma tantas."
+},
+{
+  id:"B5", ruta:"fracciones", personaje:"copito",
+  titulo:"La zanahoria repartida",
+  meta:"Calcular la mitad, el tercio y el cuarto de un montón de cosas dibujadas.",
+  saludo:"Traigo 8 zanahorias y 12 copos de azúcar. Hay que repartirlos en partes iguales, sin que sobre nada.",
+  materiales:["Cuaderno","Lápiz"],
+  modelo:"reparto",
+  modeloPasos:[
+    "Dibuja las 8 zanahorias en fila.",
+    "Para la mitad, haz dos grupos con el mismo número en cada uno.",
+    "Cuenta cuántas hay en un grupo. Ese es el resultado.",
+    "Con 12 copos y cuatro grupos, se hace igual: repartes de uno en uno hasta que se acaban."
+  ],
+  instrucciones:[
+    "Dibuja 8 zanahorias y rodéalas en 2 grupos iguales.",
+    "Escribe: la mitad de 8 es ___.",
+    "Dibuja 12 copos y rodéalos en 4 grupos iguales.",
+    "Escribe: un cuarto de 12 es ___.",
+    "Dibuja 9 piedras y rodéalas en 3 grupos iguales. Escribe: un tercio de 9 es ___."
+  ],
+  preguntas:[
+    {q:"En tu dibujo, ¿cuántas zanahorias quedaron en cada grupo?",
+     ops:["2","3","4","8"], ok:2,
+     bien:"Repartiste primero y contaste después. Ese es el método.",
+     pista:"Cuenta las zanahorias de uno solo de los dos grupos."},
+    {q:"Un cuarto de 12 copos es…",
+     ops:["2","3","4","6"], ok:1,
+     bien:"Hiciste cuatro grupos iguales y contaste uno.",
+     pista:"Mira en tu dibujo los 4 grupos de copos y cuenta los de un grupo."},
+    {q:"Un tercio de 9 piedras es…",
+     ops:["2","3","4","6"], ok:1,
+     bien:"Tres grupos iguales, y cada grupo es un tercio.",
+     pista:"Cuenta en tu dibujo las piedras de uno de los tres grupos."}
+  ],
+  checklist:[
+    "Mis grupos tienen todos el mismo número.",
+    "No me sobró ninguna zanahoria ni ningún copo.",
+    "Completé las tres frases."
+  ],
+  cierre:"Repartir en partes iguales y contar un grupo: así se saca la fracción de una cantidad."
+},
+{
+  id:"B6", ruta:"fracciones", personaje:"kristo",
+  titulo:"El año en fracciones",
+  meta:"Unir las dos rutas: ver el año como partes iguales.",
+  saludo:"Ahora junta las dos cosas que aprendiste. Tu rueda del año tiene 12 casillas iguales, así que se puede hablar de ella en fracciones.",
+  materiales:["Tu rueda del año","Cuaderno","Lápiz","Colores"],
+  modelo:"aniofraccion",
+  modeloPasos:[
+    "Doce casillas iguales: el año está partido en doce partes.",
+    "Si tomas seis casillas seguidas, tienes la mitad del año.",
+    "Si tomas tres, tienes un cuarto, como las estaciones que pintaste.",
+    "Si tomas cuatro, tienes un tercio del año."
+  ],
+  instrucciones:[
+    "Dibuja tres ruedas pequeñas del año, con sus 12 casillas.",
+    "En la primera pinta 6 casillas y escribe debajo 6/12 = la mitad.",
+    "En la segunda pinta 3 casillas y escribe 3/12 = un cuarto.",
+    "En la tercera pinta 4 casillas y escribe 4/12 = un tercio.",
+    "Escribe al final: mi cumpleaños está en el mes ___ de 12."
+  ],
+  preguntas:[
+    {q:"Seis meses de doce son…",
+     ops:["un cuarto del año","la mitad del año","todo el año"], ok:1,
+     bien:"Comprobaste que las dos partes de la rueda quedan iguales.",
+     pista:"Mira en tu cuaderno la primera rueda: ¿la parte pintada y la que quedó en blanco son iguales?"},
+    {q:"Las cuatro estaciones que pintaste antes eran de 3 meses. Cada estación es…",
+     ops:["1/3 del año","1/4 del año","1/12 del año"], ok:1,
+     bien:"Enlazaste la rueda de las estaciones con las fracciones.",
+     pista:"Cuenta cuántos grupos de 3 caben en 12. El año quedó en ese número de partes."},
+    {q:"Un solo mes, ¿qué parte del año es?",
+     ops:["1/2","1/4","1/12"], ok:2,
+     bien:"Una casilla de doce casillas iguales.",
+     pista:"Mira una rueda de tu cuaderno: tiene 12 casillas iguales y tú pintas una."}
+  ],
+  checklist:[
+    "Dibujé las tres ruedas con 12 casillas.",
+    "Pinté 6, 3 y 4 casillas.",
+    "Escribí las tres fracciones debajo."
+  ],
+  cierre:"Terminaste las dos rutas. Tu cuaderno tiene ahora un calendario y una guía de fracciones hechos por ti."
+}
+];
+/*==DATOS_FIN==*/
+
+/* ================= almacenamiento seguro ================= */
+const Guardado = (function(){
+  const clave="mia_cuaderno_helado_v1";
+  let memoria={};
+  let hayDisco=true;
+  try{ const t=window.localStorage.getItem(clave); memoria = t?JSON.parse(t):{}; }
+  catch(e){ hayDisco=false; memoria={}; }
+  return {
+    dato(){ return memoria; },
+    set(k,v){ memoria[k]=v; if(hayDisco){ try{ localStorage.setItem(clave, JSON.stringify(memoria)); }catch(e){} } }
+  };
+})();
+
+const S = {
+  vista:"menu",
+  ruta:null,
+  mision:null,
+  paso:0,
+  preg:0,
+  intentos:0,
+  marcadas:[],
+  perfectas:true,
+  voz: Guardado.dato().voz !== false,
+  hechas: Guardado.dato().hechas || {}
+};
+
+/* ================= voz ================= */
+let vozES=null;
+function cargarVoz(){
+  if(!("speechSynthesis" in window)) return;
+  const vs = speechSynthesis.getVoices()||[];
+  vozES = vs.find(v=>/^es[-_]ES/i.test(v.lang)) || vs.find(v=>/^es/i.test(v.lang)) || null;
+}
+if("speechSynthesis" in window){
+  cargarVoz();
+  speechSynthesis.onvoiceschanged = cargarVoz;
+}
+let colaVoz=[];
+function callar(){
+  colaVoz=[];
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+}
+function hablar(textos){
+  if(!S.voz || !("speechSynthesis" in window)) return;
+  callar();
+  colaVoz = (Array.isArray(textos)?textos:[textos]).filter(t=>t && String(t).trim().length);
+  siguienteVoz();
+}
+function siguienteVoz(){
+  if(!colaVoz.length) return;
+  const t = colaVoz.shift();
+  const u = new SpeechSynthesisUtterance(limpiar(t));
+  u.lang = vozES ? vozES.lang : "es-ES";
+  if(vozES) u.voice = vozES;
+  u.rate = 0.95; u.pitch = 1.05;
+  u.onend = siguienteVoz;
+  u.onerror = siguienteVoz;
+  speechSynthesis.speak(u);
+}
+function limpiar(t){
+  return String(t)
+    .replace(/(\d+)\s*\/\s*(\d+)/g, function(_,a,b){ return a+" partido en "+b; })
+    .replace(/…/g,".")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+/* ================= wake lock ================= */
+let wl=null;
+async function mantenerPantalla(on){
+  try{
+    if(on && "wakeLock" in navigator){ wl = await navigator.wakeLock.request("screen"); }
+    else if(!on && wl){ await wl.release(); wl=null; }
+  }catch(e){}
+}
+
+/* ================= personajes (dibujos originales) ================= */
+const NOMBRES = {elina:"Elina, la reina del hielo", aura:"Aura, la princesa del sol",
+  copito:"Copito, el muñeco de nieve", kristo:"Kristo, el montañero", nevado:"Nevado, el reno"};
+
+function cara(id, tam){
+  const t = tam||74;
+  const c = {
+    elina:'<circle cx="50" cy="52" r="30" fill="#f6e0d0"/><path d="M20 46c0-22 14-34 30-34s30 12 30 34c-6-10-16-14-30-14S26 36 20 46z" fill="#dff2ff"/><path d="M20 44c-6 16-4 34 4 44 2-16 0-30-4-44z" fill="#dff2ff"/><path d="M80 44c6 16 4 34-4 44-2-16 0-30 4-44z" fill="#dff2ff"/><circle cx="40" cy="52" r="3.4" fill="#25405c"/><circle cx="60" cy="52" r="3.4" fill="#25405c"/><path d="M42 64q8 6 16 0" stroke="#c2647a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M36 22h28l-6 8H42z" fill="#9fe6ff"/>',
+    aura:'<circle cx="50" cy="52" r="30" fill="#f8e2cf"/><path d="M18 48c2-24 16-36 32-36s30 12 32 36c-8-12-18-16-32-16s-24 4-32 16z" fill="#e8b072"/><path d="M18 48c-2 18 2 32 8 40-4-16-6-28-8-40z" fill="#e8b072"/><path d="M82 48c2 18-2 32-8 40 4-16 6-28 8-40z" fill="#e8b072"/><circle cx="40" cy="52" r="3.4" fill="#3a2b22"/><circle cx="60" cy="52" r="3.4" fill="#3a2b22"/><path d="M42 64q8 7 16 0" stroke="#c2647a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="72" cy="34" r="5" fill="#ff9fb5"/>',
+    copito:'<circle cx="50" cy="56" r="30" fill="#ffffff"/><circle cx="50" cy="24" r="15" fill="#ffffff"/><circle cx="41" cy="52" r="4" fill="#2b3a4a"/><circle cx="59" cy="52" r="4" fill="#2b3a4a"/><path d="M50 58l16 6-16 6z" fill="#ff9147"/><path d="M36 70q14 10 28 0" stroke="#2b3a4a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M35 16q15-8 30 0" stroke="#6fbf8f" stroke-width="5" fill="none" stroke-linecap="round"/>',
+    kristo:'<circle cx="50" cy="54" r="29" fill="#eecfae"/><path d="M20 44c4-18 16-28 30-28s26 10 30 28c-8-8-18-12-30-12s-22 4-30 12z" fill="#8a6236"/><circle cx="40" cy="52" r="3.4" fill="#33261a"/><circle cx="60" cy="52" r="3.4" fill="#33261a"/><path d="M40 66q10 6 20 0" stroke="#8a5a4a" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="26" y="74" width="48" height="14" rx="7" fill="#3f6f8f"/>',
+    nevado:'<ellipse cx="50" cy="60" rx="26" ry="28" fill="#a97c50"/><ellipse cx="50" cy="72" rx="15" ry="12" fill="#e0c4a2"/><circle cx="50" cy="74" r="7" fill="#5a4030"/><circle cx="41" cy="52" r="3.6" fill="#33261a"/><circle cx="59" cy="52" r="3.6" fill="#33261a"/><path d="M32 34c-8-8-10-16-8-22 6 2 12 8 14 16z" fill="#7a5230"/><path d="M68 34c8-8 10-16 8-22-6 2-12 8-14 16z" fill="#7a5230"/>'
+  }[id] || '<circle cx="50" cy="50" r="30" fill="#dff2ff"/>';
+  return '<svg class="cara" viewBox="0 0 100 100" width="'+t+'" height="'+t+'" aria-hidden="true">'+c+'</svg>';
+}
+
+/* ================= modelos dibujados ================= */
+function coloresEstacion(i){ return ["#bfe6ff","#c9f2d6","#ffe0a8","#f3ccd8"][Math.floor(i/3)]; }
+
+function ruedaSVG(pintar){
+  let g='';
+  for(let i=0;i<12;i++){
+    const a0=(i*30-90)*Math.PI/180, a1=((i+1)*30-90)*Math.PI/180;
+    const x0=110+95*Math.cos(a0), y0=110+95*Math.sin(a0);
+    const x1=110+95*Math.cos(a1), y1=110+95*Math.sin(a1);
+    const relleno = pintar ? coloresEstacion(i) : "#ffffff";
+    g += '<path d="M110 110 L'+x0.toFixed(1)+' '+y0.toFixed(1)+' A95 95 0 0 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+' Z" fill="'+relleno+'" stroke="#8aa3bb" stroke-width="1.6"/>';
+    const am=((i+0.5)*30-90)*Math.PI/180;
+    const tx=110+64*Math.cos(am), ty=110+64*Math.sin(am);
+    g += '<text x="'+tx.toFixed(1)+'" y="'+(ty+4).toFixed(1)+'" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">'+MESES[i].n1.slice(0,3)+'</text>';
+  }
+  return '<svg viewBox="0 0 220 230" role="img" aria-label="Rueda del año con doce casillas">'+g+
+    '<text x="110" y="226" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">enero arriba, sigue hacia la derecha</text></svg>';
+}
+
+function listaSVG(){
+  let g='', y=26;
+  for(let i=0;i<12;i++){
+    const col = i<6?18:120, yy = 26 + (i%6)*32;
+    g += '<text x="'+col+'" y="'+yy+'" font-size="17" fill="#2b3a4a" font-family="Verdana,sans-serif">'+MESES[i].n+'. '+MESES[i].n1+'</text>';
+    g += '<line x1="'+col+'" y1="'+(yy+6)+'" x2="'+(col+92)+'" y2="'+(yy+6)+'" stroke="#dcd2ba" stroke-width="1"/>';
+  }
+  return '<svg viewBox="0 0 230 210" role="img" aria-label="Lista de los doce meses numerados">'+g+'</svg>';
+}
+
+function nudillosSVG(){
+  let g='<rect x="34" y="74" width="176" height="58" rx="26" fill="#f2d3b3"/>';
+  const nomb=["enero","marzo","mayo","julio"], hue=["febrero","abril","junio"];
+  for(let i=0;i<4;i++){
+    const x=56+i*40;
+    g+='<circle cx="'+x+'" cy="74" r="19" fill="#f6ddc4" stroke="#d7b391" stroke-width="2"/>';
+    g+='<text x="'+x+'" y="'+(i%2?34:50)+'" font-size="12" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">'+nomb[i]+'</text>';
+    g+='<line x1="'+x+'" y1="'+(i%2?38:54)+'" x2="'+x+'" y2="54" stroke="#b9a98d" stroke-width="1.2"/>';
+    g+='<text x="'+x+'" y="80" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">31</text>';
+  }
+  for(let i=0;i<3;i++){
+    const x=76+i*40;
+    g+='<text x="'+x+'" y="'+(i%2?170:154)+'" font-size="12" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">'+hue[i]+'</text>';
+    g+='<text x="'+x+'" y="116" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">'+(i===0?"28":"30")+'</text>';
+    g+='<line x1="'+x+'" y1="122" x2="'+x+'" y2="'+(i%2?158:142)+'" stroke="#b9a98d" stroke-width="1.2"/>';
+  }
+  g+='<text x="122" y="196" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">nudillo: 31 dias. hueco: 30 dias.</text>';
+  g+='<text x="122" y="214" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">febrero es la excepcion: 28 dias</text>';
+  g+='<text x="122" y="232" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">tras julio, vuelve al primer nudillo</text>';
+  return '<svg viewBox="0 0 244 242" role="img" aria-label="Mano cerrada con nudillos y huecos para contar los dias de cada mes">'+g+'</svg>';
+}
+
+function igualesSVG(){
+  return '<svg viewBox="0 0 230 130" role="img" aria-label="Cuatro figuras partidas en dos trozos">'+
+  '<rect x="10" y="20" width="46" height="60" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="33" y1="20" x2="33" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="33" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">1</text>'+
+  '<rect x="70" y="20" width="46" height="60" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="82" y1="20" x2="104" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="93" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">2</text>'+
+  '<circle cx="153" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="153" y1="20" x2="153" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="153" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">3</text>'+
+  '<circle cx="205" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="180" y1="34" x2="230" y2="34" stroke="#5b7f9e" stroke-width="2"/><text x="205" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">4</text>'+
+  '<text x="115" y="122" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">copia las cuatro y decide cuales tienen partes iguales</text></svg>';
+}
+
+function mitadesSVG(){
+  return '<svg viewBox="0 0 230 140" role="img" aria-label="Rectangulo, cuadrado y circulo partidos por la mitad con una parte pintada">'+
+  '<rect x="12" y="24" width="60" height="46" fill="#ffffff" stroke="#5b7f9e" stroke-width="2"/><rect x="12" y="24" width="30" height="46" fill="#9fd8f5"/><line x1="42" y1="24" x2="42" y2="70" stroke="#5b7f9e" stroke-width="2"/><text x="42" y="90" font-size="15" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">1/2</text>'+
+  '<rect x="92" y="24" width="46" height="46" fill="#ffffff" stroke="#5b7f9e" stroke-width="2"/><rect x="92" y="24" width="46" height="23" fill="#9fd8f5"/><line x1="92" y1="47" x2="138" y2="47" stroke="#5b7f9e" stroke-width="2"/><text x="115" y="90" font-size="15" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">1/2</text>'+
+  '<circle cx="190" cy="47" r="25" fill="#ffffff" stroke="#5b7f9e" stroke-width="2"/><path d="M190 22a25 25 0 0 1 0 50z" fill="#9fd8f5"/><line x1="190" y1="22" x2="190" y2="72" stroke="#5b7f9e" stroke-width="2"/><text x="190" y="90" font-size="15" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">1/2</text>'+
+  '<text x="115" y="116" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">1 parte pintada de 2 partes iguales</text>'+
+  '<text x="115" y="132" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">el cuadrado tambien se parte con una raya de lado a lado</text></svg>';
+}
+
+function barrasSVG(){
+  let g='';
+  const anchoTotal=192;
+  [3,4].forEach(function(partes, fila){
+    const y=24+fila*54, p=anchoTotal/partes;
+    for(let i=0;i<partes;i++){
+      g+='<rect x="'+(16+i*p)+'" y="'+y+'" width="'+p+'" height="36" fill="'+(i===0?"#9fd8f5":"#ffffff")+'" stroke="#5b7f9e" stroke-width="2"/>';
+    }
+    g+='<text x="16" y="'+(y+52)+'" font-size="14" fill="#2b3a4a" font-family="Verdana,sans-serif">1/'+partes+'</text>';
+  });
+  return '<svg viewBox="0 0 224 140" role="img" aria-label="Dos barras iguales, una partida en tres y otra en cuatro, con la primera parte pintada">'+g+
+  '<text x="112" y="136" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">las dos barras miden lo mismo</text></svg>';
+}
+
+function escribirSVG(){
+  let g='', p=192/5;
+  for(let i=0;i<5;i++){
+    g+='<rect x="'+(16+i*p).toFixed(1)+'" y="30" width="'+p.toFixed(1)+'" height="42" fill="'+(i<3?"#9fd8f5":"#ffffff")+'" stroke="#5b7f9e" stroke-width="2"/>';
+  }
+  g+='<text x="112" y="24" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">5 partes iguales, 3 pintadas</text>';
+  g+='<text x="44" y="106" font-size="28" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">3</text>';
+  g+='<line x1="30" y1="114" x2="58" y2="114" stroke="#2b3a4a" stroke-width="3"/>';
+  g+='<text x="44" y="144" font-size="28" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">5</text>';
+  g+='<text x="72" y="106" font-size="12" fill="#6b7a8a" font-family="Verdana,sans-serif">las que pintaste</text>';
+  g+='<text x="72" y="144" font-size="12" fill="#6b7a8a" font-family="Verdana,sans-serif">todas las partes</text>';
+  return '<svg viewBox="0 0 224 156" role="img" aria-label="Barra en cinco partes con tres pintadas y la fraccion tres quintos escrita debajo">'+g+'</svg>';
+}
+
+function repartoSVG(){
+  let g='';
+  function zanahoria(x,y){
+    return '<path d="M'+x+' '+y+' l9 3 -9 20 -9-20z" fill="#ff9147"/><path d="M'+x+' '+y+' l-5-7 M'+x+' '+y+' l5-7" stroke="#5aa86a" stroke-width="2.5" stroke-linecap="round"/>';
+  }
+  for(let i=0;i<8;i++){
+    const x = 34 + (i%4)*38, y = 34 + Math.floor(i/4)*58;
+    g += zanahoria(x,y);
+  }
+  g+='<rect x="12" y="14" width="156" height="42" rx="20" fill="none" stroke="#c2647a" stroke-width="2.5" stroke-dasharray="6 5"/>';
+  g+='<rect x="12" y="72" width="156" height="42" rx="20" fill="none" stroke="#c2647a" stroke-width="2.5" stroke-dasharray="6 5"/>';
+  g+='<text x="180" y="42" font-size="14" fill="#2b3a4a" font-family="Verdana,sans-serif">4</text>';
+  g+='<text x="180" y="100" font-size="14" fill="#2b3a4a" font-family="Verdana,sans-serif">4</text>';
+  g+='<text x="100" y="134" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">la mitad de 8 es 4</text>';
+  return '<svg viewBox="0 0 210 146" role="img" aria-label="Ocho zanahorias repartidas en dos grupos de cuatro">'+g+'</svg>';
+}
+
+function pistasSVG(){
+  return '<svg viewBox="0 0 224 150" role="img" aria-label="Ejemplo de como buscar un mes en la rueda a partir de una pista">'+
+  '<text x="14" y="30" font-size="15" fill="#2b3a4a" font-family="Verdana,sans-serif">pista: dos meses despues de abril</text>'+
+  '<rect x="14" y="46" width="60" height="34" rx="8" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><text x="44" y="68" font-size="14" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">abril</text>'+
+  '<rect x="84" y="46" width="60" height="34" rx="8" fill="#ffffff" stroke="#5b7f9e" stroke-width="2"/><text x="114" y="68" font-size="14" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">mayo</text>'+
+  '<rect x="154" y="46" width="60" height="34" rx="8" fill="#c9f2d6" stroke="#5b7f9e" stroke-width="2"/><text x="184" y="68" font-size="14" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">junio</text>'+
+  '<text x="114" y="104" font-size="13" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">un salto, dos saltos: aqui va la fiesta</text>'+
+  '<text x="114" y="128" font-size="13" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">busca siempre en tu rueda, con el dedo</text></svg>';
+}
+
+function revueltosSVG(){
+  const ms=["octubre","marzo","julio","enero","diciembre","mayo"];
+  let g='';
+  ms.forEach(function(m,i){
+    const x=14+(i%3)*70, y=26+Math.floor(i/3)*44;
+    g+='<rect x="'+x+'" y="'+y+'" width="62" height="30" rx="8" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2" transform="rotate('+((i%2?4:-4))+' '+(x+31)+' '+(y+15)+')"/>';
+    g+='<text x="'+(x+31)+'" y="'+(y+20)+'" font-size="12" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif" transform="rotate('+((i%2?4:-4))+' '+(x+31)+' '+(y+15)+')">'+m+'</text>';
+  });
+  g+='<text x="112" y="132" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">copialos y despues ordenalos en tu cuaderno</text>';
+  return '<svg viewBox="0 0 224 142" role="img" aria-label="Seis carteles de meses desordenados">'+g+'</svg>';
+}
+
+function anioFraccionSVG(){
+  function mini(cx, pintadas, etiqueta){
+    let g='';
+    for(let i=0;i<12;i++){
+      const a0=(i*30-90)*Math.PI/180, a1=((i+1)*30-90)*Math.PI/180;
+      const x0=cx+34*Math.cos(a0), y0=54+34*Math.sin(a0);
+      const x1=cx+34*Math.cos(a1), y1=54+34*Math.sin(a1);
+      g+='<path d="M'+cx+' 54 L'+x0.toFixed(1)+' '+y0.toFixed(1)+' A34 34 0 0 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+' Z" fill="'+(i<pintadas?"#9fd8f5":"#ffffff")+'" stroke="#5b7f9e" stroke-width="1.3"/>';
+    }
+    g+='<text x="'+cx+'" y="108" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">'+etiqueta+'</text>';
+    return g;
+  }
+  return '<svg viewBox="0 0 230 120" role="img" aria-label="Tres ruedas del año con seis, tres y cuatro casillas pintadas">'+
+    mini(42,6,"6/12 mitad")+mini(115,3,"3/12 un cuarto")+mini(188,4,"4/12 un tercio")+'</svg>';
+}
+
+const MODELOS = {
+  lista:listaSVG, rueda:function(){return ruedaSVG(false);}, estaciones:function(){return ruedaSVG(true);},
+  nudillos:nudillosSVG, pistas:pistasSVG, revueltos:revueltosSVG,
+  iguales:igualesSVG, mitades:mitadesSVG, terciosycuartos:barrasSVG, escribir:escribirSVG,
+  reparto:repartoSVG, aniofraccion:anioFraccionSVG
+};
+
+/* ================= utilidades de render ================= */
+const app = document.getElementById("app");
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function pinta(html, decir){
+  app.innerHTML = '<div class="aparece">'+html+'</div>';
+  window.scrollTo(0,0);
+  if(decir) hablar(decir);
+}
+function botonesVoz(){
+  return '<div class="fila" style="gap:8px">'+
+   '<button class="btn ghost" id="bRep">Repetir audio</button>'+
+   '<button class="btn ghost" id="bVoz">'+(S.voz?"Silenciar":"Activar voz")+'</button></div>';
+}
+function conectaVoz(decir){
+  const r=document.getElementById("bRep"); if(r) r.onclick=function(){ hablar(decir); };
+  const v=document.getElementById("bVoz"); if(v) v.onclick=function(){
+    S.voz=!S.voz; Guardado.set("voz",S.voz); if(!S.voz) callar(); render();
+  };
+}
+function totalCopos(){ return Object.keys(S.hechas).length; }
+function misionesDe(ruta){ return MISIONES.filter(function(m){ return m.ruta===ruta; }); }
+function dialogo(pj, texto){
+  return '<div class="quien">'+cara(pj)+'<div class="dice"><div class="globo">'+esc(texto)+'</div></div></div>'+
+   '<div class="nombre">'+esc(NOMBRES[pj])+'</div>';
+}
+
+/* ================= pantallas ================= */
+function render(){
+  callar();
+  if(S.vista==="menu") return vistaMenu();
+  if(S.vista==="mapa") return vistaMapa();
+  if(S.vista==="mision") return vistaMision();
+}
+
+function vistaMenu(){
+  mantenerPantalla(false);
+  const decir=["El cuaderno helado de Mia.",
+    "Este juego se juega con el móvil al lado y el cuaderno delante. Aquí ves el modelo y lees lo que hay que hacer. En el cuaderno lo dibujas y lo escribes tú.",
+    "Elige una ruta: el año y sus meses, o el hielo partido en fracciones."];
+  pinta(
+    '<h1>El cuaderno helado de Mia</h1>'+
+    '<p class="sub">Se juega con el móvil al lado y el cuaderno delante.</p>'+
+    '<div class="tarjeta">'+
+      '<div class="fila" style="justify-content:space-between">'+
+        '<div>'+cara("elina",56)+cara("copito",56)+cara("kristo",56)+'</div>'+
+        '<div class="copos">❄ '+totalCopos()+' / '+MISIONES.length+'</div>'+
+      '</div>'+
+      '<p style="margin-top:10px">Aquí ves el modelo y lees lo que hay que hacer. En el cuaderno lo dibujas y lo escribes tú.</p>'+
+      '<div class="mats"><span class="mat">Cuaderno</span><span class="mat">Lápiz</span><span class="mat">Colores</span><span class="mat">Regla</span></div>'+
+    '</div>'+
+    '<div class="rutas"><button class="btn" id="r1">Ruta del año · los meses</button>'+
+    '<button class="btn" id="r2">Ruta del hielo · las fracciones</button></div>'+
+    botonesVoz()+
+    '<div class="pie">v1.1 · hecho para Mia</div>', decir);
+  document.getElementById("r1").onclick=function(){ S.ruta="anio"; S.vista="mapa"; render(); };
+  document.getElementById("r2").onclick=function(){ S.ruta="fracciones"; S.vista="mapa"; render(); };
+  conectaVoz(decir);
+}
+
+function vistaMapa(){
+  mantenerPantalla(false);
+  const lista = misionesDe(S.ruta);
+  const titulo = S.ruta==="anio" ? "Ruta del año" : "Ruta del hielo";
+  const intro = S.ruta==="anio"
+    ? "Seis misiones para conocer los meses del año y hacer tu propio calendario."
+    : "Seis misiones para partir, pintar y escribir fracciones en tu cuaderno.";
+  let html='<div class="barra"><button class="btn ghost" style="width:auto;padding:10px 16px" id="volver">Volver</button>'+
+    '<span class="copos">❄ '+totalCopos()+'</span></div>'+
+    '<h2>'+titulo+'</h2><p>'+esc(intro)+'</p><ul class="lista-mis">';
+  lista.forEach(function(m,i){
+    const hecha = !!S.hechas[m.id];
+    html += '<li><button class="mis'+(hecha?" hecha":"")+'" data-id="'+m.id+'">'+
+      '<span class="ins">'+(hecha?"❄":(i+1))+'</span>'+
+      '<span><b>'+esc(m.titulo)+'</b><br><span style="font-size:15px;color:#a9cfe8">'+esc(m.meta)+'</span></span></button></li>';
+  });
+  html+='</ul>';
+  pinta(html, [titulo+".", intro]);
+  document.getElementById("volver").onclick=function(){ S.vista="menu"; render(); };
+  Array.prototype.forEach.call(document.querySelectorAll(".mis"), function(b){
+    b.onclick=function(){
+      S.mision = MISIONES.find(function(m){ return m.id===b.dataset.id; });
+      S.paso=0; S.preg=0; S.intentos=0; S.perfectas=true;
+      S.marcadas = S.mision.checklist.map(function(){ return false; });
+      S.vista="mision"; render();
+    };
+  });
+}
+
+/* pasos internos de una misión */
+function pasosMision(m){
+  const p = [{t:"portada"}];
+  m.modeloPasos.forEach(function(_,i){ p.push({t:"modelo", i:i}); });
+  p.push({t:"hacer"});
+  m.preguntas.forEach(function(_,i){ p.push({t:"pregunta", i:i}); });
+  p.push({t:"check"});
+  p.push({t:"fin"});
+  return p;
+}
+
+function vistaMision(){
+  const m = S.mision;
+  const pasos = pasosMision(m);
+  const paso = pasos[S.paso];
+  mantenerPantalla(paso.t==="hacer");
+
+  const cabecera = '<div class="barra">'+
+    '<button class="btn ghost" style="width:auto;padding:10px 16px" id="salir">Salir</button>'+
+    '<span class="sub">'+esc(m.titulo)+'</span></div>';
+
+  if(paso.t==="portada"){
+    const decir=[m.saludo, "Lo que vas a hacer: "+m.meta, "Prepara: "+m.materiales.join(", ")+"."];
+    pinta(cabecera+'<div class="dos"><div class="izq">'+dialogo(m.personaje, m.saludo)+'</div><div class="der">'+
+      '<div class="tarjeta"><h3>Lo que vas a hacer</h3><p>'+esc(m.meta)+'</p>'+
+      '<div class="mats">'+m.materiales.map(function(x){return '<span class="mat">'+esc(x)+'</span>';}).join("")+'</div></div>'+
+      '<button class="btn" id="sig">Ver el modelo</button>'+botonesVoz()+'</div></div>', decir);
+    document.getElementById("sig").onclick=avanzar;
+  }
+  else if(paso.t==="modelo"){
+    const texto = m.modeloPasos[paso.i];
+    const svg = MODELOS[m.modelo] ? MODELOS[m.modelo]() : "";
+    const ultimo = paso.i === m.modeloPasos.length-1;
+    pinta(cabecera+
+      '<div class="dos"><div class="izq"><div class="modelo">'+svg+'</div></div><div class="der">'+
+      '<div class="paso"><span class="num">'+(paso.i+1)+'</span><span>'+esc(texto)+'</span></div>'+
+      '<button class="btn" id="sig">'+(ultimo?"Ya lo entiendo, a mi cuaderno":"Siguiente")+'</button>'+
+      (paso.i>0?'<button class="btn ghost" id="atras">Atrás</button>':'')+
+      botonesVoz()+'</div></div>', [texto]);
+    document.getElementById("sig").onclick=avanzar;
+    const a=document.getElementById("atras"); if(a) a.onclick=retroceder;
+  }
+  else if(paso.t==="hacer"){
+    const svg = MODELOS[m.modelo] ? MODELOS[m.modelo]() : "";
+    const decir = ["Ahora en tu cuaderno."].concat(m.instrucciones).concat(["Cuando termines, toca ya lo hice. Tómate el tiempo que quieras."]);
+    pinta(cabecera+
+      '<div class="ref-top"><h2>Ahora en tu cuaderno</h2></div>'+
+      '<div class="dos"><div class="izq"><div class="modelo">'+svg+'</div></div><div class="der">'+
+      m.instrucciones.map(function(t,i){
+        return '<div class="paso"><span class="num">'+(i+1)+'</span><span>'+esc(t)+'</span></div>';
+      }).join("")+
+      '<div class="aviso">Sin prisa. La pantalla se queda aquí todo el tiempo que necesites.</div>'+
+      '<button class="btn" id="sig">Ya lo hice</button>'+
+      '<button class="btn ghost" id="atras">Ver otra vez la explicación</button>'+
+      botonesVoz()+'</div></div>', decir);
+    document.getElementById("sig").onclick=avanzar;
+    document.getElementById("atras").onclick=function(){ S.paso = 1; render(); };
+  }
+  else if(paso.t==="pregunta"){
+    const q = m.preguntas[paso.i];
+    const decir=["Pregunta "+(paso.i+1)+" de "+m.preguntas.length+".", q.q].concat(q.ops);
+    let html = cabecera+'<h2>Mira tu cuaderno</h2>'+
+      '<p class="grande">'+esc(q.q)+'</p>';
+    html += '<div class="ops">';
+    q.ops.forEach(function(o,i){ html += '<button class="op" data-i="'+i+'">'+esc(o)+'</button>'; });
+    html += '</div>';
+    html += '<div id="fb"></div>'+botonesVoz();
+    pinta(html, decir);
+    Array.prototype.forEach.call(document.querySelectorAll(".op"), function(b){
+      b.onclick=function(){ responder(q, parseInt(b.dataset.i,10), b); };
+    });
+  }
+  else if(paso.t==="check"){
+    let html = cabecera+'<h2>Revisa tu página</h2>'+
+      '<p>Marca lo que ya está en tu cuaderno. Si falta algo, todavía puedes añadirlo.</p>';
+    m.checklist.forEach(function(t,i){
+      html += '<button class="marca'+(S.marcadas[i]?" si":"")+'" data-i="'+i+'"><span class="caja">'+(S.marcadas[i]?"✓":"")+'</span><span>'+esc(t)+'</span></button>';
+    });
+    html += '<button class="btn" id="sig">Terminar la misión</button>'+botonesVoz();
+    const decir=["Revisa tu página.","Marca lo que ya está en tu cuaderno. Si falta algo, todavía puedes añadirlo."].concat(m.checklist);
+    pinta(html, decir);
+    Array.prototype.forEach.call(document.querySelectorAll(".marca"), function(b){
+      b.onclick=function(){ const i=parseInt(b.dataset.i,10); S.marcadas[i]=!S.marcadas[i]; render(); };
+    });
+    document.getElementById("sig").onclick=avanzar;
+  }
+  else if(paso.t==="fin"){
+    S.hechas[m.id]=true; Guardado.set("hechas", S.hechas);
+    const elogio = S.perfectas
+      ? "Respondiste todo mirando tu cuaderno en vez de adivinar. Ese es el método que funciona."
+      : "Cuando algo no salió, volviste al dibujo y lo comprobaste. Así es como se aprende.";
+    const decir=["Misión terminada.", elogio, m.cierre];
+    pinta(cabecera+
+      '<h1>❄ Misión terminada</h1>'+
+      '<div class="dos"><div class="izq">'+dialogo(m.personaje, m.cierre)+'</div><div class="der">'+
+      '<div class="aviso">'+esc(elogio)+'</div>'+
+      '<button class="btn" id="mapa">Volver a las misiones</button>'+
+      '<button class="btn ghost" id="otra">Repetir esta misión</button>'+
+      botonesVoz()+'</div></div>', decir);
+    document.getElementById("mapa").onclick=function(){ S.vista="mapa"; render(); };
+    document.getElementById("otra").onclick=function(){
+      S.paso=0; S.perfectas=true; S.marcadas=m.checklist.map(function(){return false;}); render();
+    };
+  }
+
+  const sal=document.getElementById("salir");
+  if(sal) sal.onclick=function(){ S.vista="mapa"; render(); };
+}
+
+function responder(q, i, boton){
+  const fb=document.getElementById("fb");
+  const ok = (i===q.ok);
+  if(ok){
+    boton.classList.add("bien");
+    fb.innerHTML='<div class="aviso">'+esc(q.bien)+'</div><button class="btn" id="sig">Seguir</button>';
+    hablar([q.bien]);
+  } else {
+    S.perfectas=false;
+    boton.classList.add("mal");
+    S.intentos++;
+    if(S.intentos<2){
+      fb.innerHTML='<div class="aviso">'+esc(q.pista)+'</div>';
+      hablar([q.pista]);
+      return;
+    }
+    const correcta = q.ops[q.ok];
+    fb.innerHTML='<div class="aviso">La respuesta es: '+esc(correcta)+'. '+esc(q.pista)+'</div>'+
+      '<button class="btn" id="sig">Seguir</button>';
+    hablar(["La respuesta es "+correcta+".", q.pista]);
+    const b=document.querySelectorAll(".op")[q.ok]; if(b) b.classList.add("bien");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".op"), function(b){ b.disabled=true; });
+  const s=document.getElementById("sig");
+  if(s) s.onclick=function(){ S.intentos=0; avanzar(); };
+}
+
+function avanzar(){
+  const pasos = pasosMision(S.mision);
+  if(S.paso < pasos.length-1){ S.paso++; render(); }
+}
+function retroceder(){ if(S.paso>0){ S.paso--; render(); } }
+
+/* arranque */
+render();
+document.addEventListener("visibilitychange", function(){ if(document.hidden) callar(); });
+</script>
+</body>
+</html>
