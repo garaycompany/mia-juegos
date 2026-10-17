@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Lluvia de lodo — el robot de Mia</title>
+<style>
+/* ===========================================================
+   PALETA TOMADA DEL DIBUJO DE MIA (lapiz de color sobre papel)
+   =========================================================== */
+:root{
+  --papel:#FBF8F2;
+  --verde:#3A9B4C;        /* rotulador verde: contornos */
+  --verde-hondo:#27703A;
+  --amarillo:#F2D45C;     /* monedas, arco del robot */
+  --cielo:#A8CFE0;        /* rayado azul del cielo */
+  --lodo:#9C6B3F;         /* marron del lodo */
+  --lodo-hondo:#6E4726;
+  --rojo:#E4736B;         /* mejillas, boton 2 */
+  --morado:#8B4FA8;       /* recuadro del control */
+  --azul:#5B9BC4;         /* boton 1 */
+  --tinta:#2F3A2F;
+  --sombra:rgba(47,58,47,.18);
+  /* Tipografía de alta legibilidad: letras anchas y b/d/p/q bien distintas.
+     Es un juego de lectura; la fuente no puede ser un obstáculo. */
+  --fuente:Verdana,"Trebuchet MS","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;padding:0;height:100%;overflow:hidden;
+  background:var(--tinta);
+  font-family:var(--fuente);
+  color:var(--tinta);
+  touch-action:none;
+  user-select:none;-webkit-user-select:none;
+}
+#escenario{position:fixed;inset:0;overflow:hidden;background:var(--papel)}
+canvas#lienzo{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* ---------- marcador de arriba ---------- */
+#marcador{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;gap:8px;align-items:center;
+  padding:8px 10px;pointer-events:none;z-index:20;
+  font-size:15px;flex-wrap:wrap;
+}
+.ficha{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(251,248,242,.92);
+  border:3px solid var(--verde);border-radius:12px;
+  padding:4px 10px;box-shadow:2px 2px 0 var(--sombra);
+  font-weight:bold;
+}
+.ficha svg{display:block}
+#pilaCaja{min-width:104px}
+#pilaBarra{
+  width:64px;height:14px;border:2px solid var(--verde-hondo);
+  border-radius:4px;background:#fff;overflow:hidden;
+}
+#pilaRelleno{height:100%;width:100%;background:var(--verde);transition:width .25s linear}
+#pilaRelleno.baja{background:var(--rojo)}
+#nivelCaja{margin-left:auto}
+#etiquetaEscena{
+  font-size:12px;font-weight:normal;opacity:.85;max-width:34vw;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* ---------- control de 4 direcciones: ABAJO A LA IZQUIERDA ---------- */
+#control{
+  position:absolute;left:14px;bottom:16px;z-index:30;
+  width:156px;height:156px;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  background:rgba(251,248,242,.55);
+  border:4px solid var(--morado);border-radius:16px;padding:6px;
+  box-shadow:3px 3px 0 var(--sombra);
+}
+.dir{
+  border:3px solid var(--morado);background:rgba(255,255,255,.9);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  color:var(--morado);font-size:26px;line-height:1;cursor:pointer;
+  padding:0;font-family:inherit;
+}
+.dir:active,.dir.presionado{background:var(--morado);color:#fff;transform:translate(1px,1px)}
+.dir:focus-visible{outline:4px solid var(--azul);outline-offset:2px}
+#dirArriba{grid-area:1/2/2/3}
+#dirIzq{grid-area:2/1/3/2}
+#dirDer{grid-area:2/3/3/4}
+#dirAbajo{grid-area:3/2/4/3}
+#centroPad{grid-area:2/2/3/3;display:flex;align-items:center;justify-content:center;color:var(--morado);opacity:.6}
+
+/* ---------- botones de accion: abajo a la derecha ---------- */
+#acciones{
+  position:absolute;right:14px;bottom:20px;z-index:30;
+  display:flex;gap:12px;align-items:flex-end;
+}
+.btnAccion{
+  width:66px;height:66px;border-radius:16px;border:4px solid var(--verde-hondo);
+  font-family:inherit;font-size:13px;font-weight:bold;color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:3px 3px 0 var(--sombra);cursor:pointer;line-height:1.1;padding:0;
+}
+#btn1{background:var(--azul)}
+#btn2{background:var(--rojo)}
+.btnAccion .num{font-size:20px}
+.btnAccion:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sombra)}
+.btnAccion:focus-visible{outline:4px solid var(--morado);outline-offset:2px}
+
+/* ---------- carteles de dialogo ---------- */
+#capaDialogo{
+  position:absolute;left:0;right:0;bottom:0;top:0;z-index:40;
+  display:none;align-items:flex-end;justify-content:center;
+  background:rgba(47,58,47,.28);padding:12px;padding-bottom:14px;
+}
+#capaDialogo.visible{display:flex}
+#cartel{
+  width:100%;max-width:640px;background:var(--papel);
+  border:5px solid var(--verde);border-radius:18px;
+  padding:14px 16px 16px;box-shadow:4px 4px 0 var(--sombra);
+}
+#quienHabla{
+  display:flex;align-items:center;gap:8px;
+  font-size:14px;font-weight:bold;color:var(--verde-hondo);margin-bottom:8px;
+}
+#quienHabla .retrato{
+  width:38px;height:38px;border:3px solid var(--verde);border-radius:50%;
+  background:#fff;flex:0 0 auto;overflow:hidden;
+}
+#textoDialogo{font-size:18px;line-height:1.6;letter-spacing:.015em;margin:0 0 6px}
+#textoDialogo .clave{
+  background:var(--amarillo);border-radius:5px;padding:0 4px;
+  box-shadow:0 2px 0 rgba(0,0,0,.08);
+}
+#textoDialogo .palabraNueva{
+  color:var(--morado);font-weight:bold;text-decoration:underline wavy var(--morado) 2px;
+}
+#opciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.opcion{
+  flex:1 1 46%;min-height:62px;border-radius:14px;border:4px solid var(--verde-hondo);
+  background:#fff;font-family:inherit;font-size:16px;font-weight:bold;color:var(--tinta);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  cursor:pointer;padding:8px;box-shadow:3px 3px 0 var(--sombra);text-align:center;
+}
+.opcion:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sombra)}
+.opcion:focus-visible{outline:4px solid var(--morado);outline-offset:2px}
+.opcion.paraguas{background:#E8F1F7}
+.opcion.seguir{background:#F3F7E8}
+#seguirCartel{
+  margin-top:10px;width:100%;min-height:52px;border-radius:12px;
+  border:4px solid var(--verde-hondo);background:var(--verde);color:#fff;
+  font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;
+}
+#seguirCartel:disabled{opacity:.45;cursor:default}
+#seguirCartel:focus-visible{outline:4px solid var(--morado);outline-offset:2px}
+
+/* ---------- avisos flotantes ---------- */
+#aviso{
+  position:absolute;top:56px;left:50%;transform:translateX(-50%);
+  z-index:35;background:rgba(251,248,242,.96);border:4px solid var(--amarillo);
+  border-radius:14px;padding:8px 14px;font-size:16px;font-weight:bold;
+  box-shadow:3px 3px 0 var(--sombra);display:none;max-width:80vw;text-align:center;
+}
+#aviso.visible{display:block}
+
+/* ---------- portada y pantallas ---------- */
+.pantalla{
+  position:absolute;inset:0;z-index:60;background:var(--papel);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;overflow-y:auto;text-align:center;
+}
+.pantalla.visible{display:flex}
+.pantalla h1{
+  font-size:clamp(25px,6.5vw,40px);margin:0 0 6px;color:var(--verde-hondo);
+  letter-spacing:-.01em;
+}
+.pantalla h2{font-size:clamp(19px,5vw,26px);margin:0 0 10px;color:var(--verde-hondo)}
+.pantalla p{font-size:16px;line-height:1.6;max-width:520px;margin:7px 0}
+.botonGrande{
+  margin-top:16px;min-height:60px;padding:12px 28px;border-radius:16px;
+  border:5px solid var(--verde-hondo);background:var(--verde);color:#fff;
+  font-family:inherit;font-size:20px;font-weight:bold;cursor:pointer;
+  box-shadow:4px 4px 0 var(--sombra);
+}
+.botonGrande.secundario{background:#fff;color:var(--verde-hondo)}
+.botonGrande:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--sombra)}
+.botonGrande:focus-visible{outline:4px solid var(--morado);outline-offset:3px}
+#tablaPalabras{
+  width:100%;max-width:520px;border-collapse:collapse;margin-top:12px;font-size:14px;
+}
+#tablaPalabras th,#tablaPalabras td{
+  border:2px solid var(--verde);padding:5px 7px;text-align:left;
+}
+#tablaPalabras th{background:var(--amarillo)}
+.bienDicho{color:var(--verde-hondo);font-weight:bold}
+.aPracticar{color:var(--lodo-hondo);font-weight:bold}
+
+/* ---------- tienda / zonas ---------- */
+#panelZona{
+  position:absolute;inset:0;z-index:50;display:none;
+  align-items:center;justify-content:center;background:rgba(47,58,47,.35);padding:14px;
+}
+#panelZona.visible{display:flex}
+#cajaZona{
+  background:var(--papel);border:5px solid var(--verde);border-radius:18px;
+  padding:16px;max-width:460px;width:100%;box-shadow:4px 4px 0 var(--sombra);
+}
+#cajaZona h3{margin:0 0 10px;font-size:20px;color:var(--verde-hondo)}
+.articulo{
+  display:flex;align-items:center;gap:10px;width:100%;margin-bottom:8px;
+  border:3px solid var(--verde);border-radius:12px;background:#fff;
+  padding:9px 11px;font-family:inherit;font-size:15px;cursor:pointer;text-align:left;
+}
+.articulo:disabled{opacity:.45;cursor:default}
+.articulo .precio{margin-left:auto;font-weight:bold;color:var(--lodo-hondo)}
+.articulo:focus-visible{outline:4px solid var(--morado);outline-offset:2px}
+
+#silencio{
+  position:absolute;top:8px;right:10px;z-index:45;
+  border:3px solid var(--verde);background:rgba(251,248,242,.92);
+  border-radius:10px;width:42px;height:38px;font-size:17px;cursor:pointer;
+  font-family:inherit;box-shadow:2px 2px 0 var(--sombra);
+}
+#silencio:focus-visible{outline:4px solid var(--morado);outline-offset:2px}
+
+@media (max-width:400px){
+  #control{width:132px;height:132px;left:10px;bottom:12px}
+  .btnAccion{width:58px;height:58px}
+  #textoDialogo{font-size:16.5px;line-height:1.55}
+}
+/* ====== HORIZONTAL: el marcador no se monta bajo el botón de voz ====== */
+#marcador{padding-right:62px}
+/* Pantallas bajas: Echo Show 5 (960 x 480) */
+@media (orientation:landscape) and (max-height:620px){
+  #capaDialogo{padding:8px}
+  #cartel{max-width:820px;padding:10px 14px 12px}
+  #quienHabla{margin-bottom:4px}
+  #quienHabla .retrato{width:32px;height:32px}
+  #textoDialogo{font-size:17px;line-height:1.5}
+  #opciones{flex-wrap:nowrap;margin-top:8px}
+  .opcion{min-height:54px}
+  #seguirCartel{min-height:46px;margin-top:8px}
+  #control{width:132px;height:132px;left:10px;bottom:10px}
+  .btnAccion{width:60px;height:60px}
+  .pantalla p{max-width:760px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div id="escenario">
+  <canvas id="lienzo"></canvas>
+
+  <div id="marcador">
+    <div class="ficha" id="monedaCaja">
+      <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><ellipse cx="10" cy="10" rx="7" ry="8.5" fill="#F2D45C" stroke="#3A9B4C" stroke-width="2"/><text x="10" y="14" font-size="10" text-anchor="middle" fill="#3A9B4C" font-family="Verdana,sans-serif">1</text></svg>
+      <span id="marcaMonedas">0</span>
+    </div>
+    <div class="ficha" id="estrellaCaja">
+      <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2l2.3 5.2 5.7.5-4.3 3.8 1.3 5.5L10 14.1 5 17l1.3-5.5L2 7.7l5.7-.5z" fill="#9C6B3F" stroke="#3A9B4C" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <span id="marcaEstrellas">0</span>
+    </div>
+    <div class="ficha" id="pilaCaja">
+      <span style="font-size:13px">Pila</span>
+      <div id="pilaBarra"><div id="pilaRelleno"></div></div>
+    </div>
+    <div class="ficha" id="nivelCaja">
+      <span id="marcaNivel">1</span>
+      <span id="etiquetaEscena">El jardin de Mia</span>
+    </div>
+  </div>
+
+  <button id="silencio" aria-label="Apagar o encender la voz" title="Voz">🔊</button>
+
+  <div id="control" role="group" aria-label="Control de cuatro direcciones">
+    <button class="dir" id="dirArriba" aria-label="Saltar">▲</button>
+    <button class="dir" id="dirIzq" aria-label="Ir a la izquierda">◀</button>
+    <div id="centroPad" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </div>
+    <button class="dir" id="dirDer" aria-label="Ir a la derecha">▶</button>
+    <button class="dir" id="dirAbajo" aria-label="Agacharse y abrir el paraguas">▼</button>
+  </div>
+
+  <div id="acciones">
+    <button class="btnAccion" id="btn1" aria-label="Saltar"><span class="num">1</span><span>saltar</span></button>
+    <button class="btnAccion" id="btn2" aria-label="Hablar o entrar"><span class="num">2</span><span>hablar</span></button>
+  </div>
+
+  <div id="aviso" role="status" aria-live="polite"></div>
+
+  <div id="capaDialogo">
+    <div id="cartel" role="dialog" aria-live="polite">
+      <div id="quienHabla"><span class="retrato" id="retrato"></span><span id="nombreQuienHabla"></span></div>
+      <p id="textoDialogo"></p>
+      <div id="opciones"></div>
+      <button id="seguirCartel">Seguir</button>
+    </div>
+  </div>
+
+  <div id="panelZona">
+    <div id="cajaZona" role="dialog">
+      <h3 id="tituloZona"></h3>
+      <div id="articulosZona"></div>
+      <button class="botonGrande secundario" id="cerrarZona" style="width:100%;margin-top:6px">Salir</button>
+    </div>
+  </div>
+
+  <div class="pantalla visible" id="portada">
+    <h1>Lluvia de lodo</h1>
+    <h2>El robot de Mia</h2>
+    <p>Tiro al Blanco y los amigos avisan como esta el cielo. Pero usan <b>palabras nuevas</b>.</p>
+    <p>Mia tiene que <b>adivinar por el resto de la frase</b> que significan: si anuncian lodo, agachate con el paraguas. Si anuncian buen tiempo, sigue corriendo.</p>
+    <p style="font-size:14px;opacity:.8">Monedas = correr y saltar. Estrellas = entender. La banderita solo baja con estrellas.</p>
+    <button class="botonGrande" id="botonEmpezar">Empezar</button>
+    <button class="botonGrande secundario" id="botonSeguirPartida" style="display:none">Seguir donde iba</button>
+  </div>
+
+  <div class="pantalla" id="pantallaNivel"></div>
+  <div class="pantalla" id="pantallaFinal"></div>
+</div>
+<script>
+"use strict";
+/* ===========================================================================
+   LLUVIA DE LODO — el robot de Mia
+   Tema 8: comprensión lectora estratégica → vocabulario en contexto.
+   Principio rector: la palabra nunca se define antes. Solo se puede inferir
+   del resto de la frase. La consecuencia es física (lodo), no un cartel de
+   "incorrecto". El error abre reenseñanza y reprograma la palabra.
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. VOCABULARIO EN CONTEXTO
+   Cada ítem: la pista SIEMPRE es una subcadena literal de la frase.
+   banda 1 = con apoyo pictórico (niveles 1-3)
+   banda 2 = solo contexto verbal (niveles 4-7)
+   banda 3 = polisémicas y repaso espaciado (niveles 8-10)
+   --------------------------------------------------------------------------- */
+const VOCABULARIO = [
+ {id:"encapotado", palabra:"encapotado", banda:1, lodo:true, quien:"Tiro al Blanco", apoyo:"nube",
+  frase:"Mira el cielo, Mia. Está encapotado: no se ve ni un pedacito de azul.",
+  pista:"no se ve ni un pedacito de azul",
+  reensena:"Encapotado quiere decir tapado de nubes. La pista estaba en «no se ve ni un pedacito de azul»: si no queda azul, el cielo está lleno de nubes."},
+
+ {id:"despejado", palabra:"despejado", banda:1, lodo:false, quien:"Woody", apoyo:"sol",
+  frase:"El cielo quedó despejado, Mia. Se fueron todas las nubes.",
+  pista:"Se fueron todas las nubes",
+  reensena:"Despejado quiere decir sin nubes. La pista estaba en «se fueron todas las nubes»: si no hay nubes, no puede caer lodo."},
+
+ {id:"chubasco", palabra:"chubasco", banda:1, lodo:true, quien:"Jessie", apoyo:"nube",
+  frase:"Viene un chubasco: cae fuerte un rato y después se acaba.",
+  pista:"cae fuerte un rato",
+  reensena:"Un chubasco es una lluvia fuerte y corta. La pista estaba en «cae fuerte un rato»: algo que cae fuerte te va a mojar."},
+
+ {id:"reluciente", palabra:"reluciente", banda:1, lodo:false, quien:"Buzz", apoyo:"sol",
+  frase:"El camino está reluciente, brilla como un espejo con el sol.",
+  pista:"brilla como un espejo con el sol",
+  reensena:"Reluciente quiere decir que brilla mucho. La pista estaba en «brilla como un espejo con el sol»: donde hay sol, no hay lodo cayendo."},
+
+ {id:"turbio", palabra:"turbio", banda:1, lodo:true, quien:"Rex", apoyo:"lodo",
+  frase:"El charco de arriba está turbio, tiene tanta tierra que no veo el fondo.",
+  pista:"tanta tierra que no veo el fondo",
+  reensena:"Turbio quiere decir revuelto y sucio. La pista estaba en «tanta tierra que no veo el fondo»: agua con tierra es exactamente lodo."},
+
+ {id:"sereno", palabra:"sereno", banda:1, lodo:false, quien:"Tiro al Blanco", apoyo:"sol",
+  frase:"La tarde está serena, Mia. No se mueve ni una hoja.",
+  pista:"No se mueve ni una hoja",
+  reensena:"Sereno quiere decir tranquilo y quieto. La pista estaba en «no se mueve ni una hoja»: si nada se mueve, no hay tormenta."},
+
+ {id:"amenazante", palabra:"amenazante", banda:2, lodo:true, quien:"Jessie",
+  frase:"Esa nube amenazante creció encima de nosotras y se puso toda negra.",
+  pista:"se puso toda negra",
+  reensena:"Amenazante quiere decir que anuncia algo malo. La pista estaba en «se puso toda negra»: una nube negra viene cargada."},
+
+ {id:"apacible", palabra:"apacible", banda:2, lodo:false, quien:"Woody",
+  frase:"El día está apacible, Mia. Todo tranquilo, sin ningún susto.",
+  pista:"Todo tranquilo, sin ningún susto",
+  reensena:"Apacible quiere decir calmado. La pista estaba en «todo tranquilo, sin ningún susto»: un día tranquilo no te tira lodo."},
+
+ {id:"lodazal", palabra:"lodazal", banda:2, lodo:true, quien:"Rex",
+  frase:"Adelante se armó un lodazal, hay tanto barro que se me hunden las patas.",
+  pista:"hay tanto barro que se me hunden las patas",
+  reensena:"Un lodazal es un lugar lleno de lodo. La pista estaba en «hay tanto barro que se me hunden las patas»."},
+
+ {id:"impecable", palabra:"impecable", banda:2, lodo:false, quien:"Buzz",
+  frase:"Tu robot quedó impecable: no le veo ni una manchita encima.",
+  pista:"no le veo ni una manchita",
+  reensena:"Impecable quiere decir perfectamente limpio. La pista estaba en «no le veo ni una manchita»."},
+
+ {id:"torrencial", palabra:"torrencial", banda:2, lodo:true, quien:"Jessie",
+  frase:"Ahí arriba cayó un agua torrencial, tanta que arrastró las piedras del camino.",
+  pista:"tanta que arrastró las piedras",
+  reensena:"Torrencial quiere decir muchísima agua de golpe. La pista estaba en «tanta que arrastró las piedras»: eso baja hecho lodo."},
+
+ {id:"radiante", palabra:"radiante", banda:2, lodo:false, quien:"Woody",
+  frase:"El sol está radiante, alumbra todo el valle de punta a punta.",
+  pista:"alumbra todo el valle",
+  reensena:"Radiante quiere decir que da mucha luz. La pista estaba en «alumbra todo el valle»: con ese sol no cae nada."},
+
+ {id:"sombrío", palabra:"sombrío", banda:2, lodo:true, quien:"Rex",
+  frase:"El cielo se puso sombrío, se fue toda la luz de repente.",
+  pista:"se fue toda la luz",
+  reensena:"Sombrío quiere decir oscuro. La pista estaba en «se fue toda la luz»: algo tapó el sol, y eso son nubes."},
+
+ {id:"límpido", palabra:"límpido", banda:2, lodo:false, quien:"Tiro al Blanco",
+  frase:"El aire está límpido, se ve clarito hasta la montaña de allá lejos.",
+  pista:"se ve clarito hasta la montaña",
+  reensena:"Límpido quiere decir limpio y transparente. La pista estaba en «se ve clarito hasta la montaña»."},
+
+ {id:"cargado_cielo", par:"cargado", palabra:"cargado", banda:3, lodo:true, quien:"Jessie",
+  frase:"El cielo está cargado, Mia. No aguanta ni una gota más de agua.",
+  pista:"No aguanta ni una gota más de agua",
+  reensena:"Aquí «cargado» habla del cielo lleno de agua. La pista estaba en «no aguanta ni una gota más de agua»."},
+
+ {id:"cargado_cinturon", par:"cargado", palabra:"cargado", banda:3, lodo:false, quien:"Buzz",
+  frase:"Mi cinturón está cargado de herramientas, pero el cielo sigue igual de azul.",
+  pista:"el cielo sigue igual de azul",
+  reensena:"Ojo: la misma palabra cambia según de qué se hable. Aquí «cargado» habla del cinturón, no del cielo. La pista estaba en «el cielo sigue igual de azul»."},
+
+ {id:"revuelto", palabra:"revuelto", banda:3, lodo:true, quien:"Tiro al Blanco",
+  frase:"El cielo está revuelto: las nubes corren para todos lados y chocan.",
+  pista:"las nubes corren para todos lados",
+  reensena:"Revuelto quiere decir todo mezclado y movido. La pista estaba en «las nubes corren para todos lados»."},
+
+ {id:"pesado_aire", par:"pesado", palabra:"pesado", banda:3, lodo:true, quien:"Rex",
+  frase:"El aire está pesado, cuesta respirar como cuando va a tronar.",
+  pista:"como cuando va a tronar",
+  reensena:"Aquí «pesado» habla del aire antes de la tormenta. La pista estaba en «como cuando va a tronar»."},
+
+ {id:"pesado_cubo", par:"pesado", palabra:"pesado", banda:3, lodo:false, quien:"Woody",
+  frase:"Este cubo está pesado y no lo puedo mover, pero arriba no hay ni una nube.",
+  pista:"arriba no hay ni una nube",
+  reensena:"Aquí «pesado» habla del cubo, no del cielo. La pista estaba en «arriba no hay ni una nube»."},
+
+ {id:"calmo", palabra:"calmo", banda:3, lodo:false, quien:"Buzz",
+  frase:"El viento está calmo, no empuja ni una nube hacia acá.",
+  pista:"no empuja ni una nube hacia acá",
+  reensena:"Calmo quiere decir quieto. La pista estaba en «no empuja ni una nube hacia acá»."}
+];
+
+/* Repaso espaciado: qué palabras viejas reaparecen en los niveles altos */
+const REPASO = {8:["encapotado"], 9:["turbio"], 10:["despejado","torrencial","chubasco","reluciente"]};
+
+/* ---------------------------------------------------------------------------
+   2. LOS 10 ESCENARIOS — cada nivel es un mundo distinto
+   --------------------------------------------------------------------------- */
+const ESCENAS = [
+ {n:1,  nombre:"El jardín de Mia",     cielo:"#BFE3F2", lejos:"#9CC98C", suelo:"#8FBF6A", tierra:"#C9A87C", adorno:"flores",  largo:2400, huecos:0, cubos:3, plataformas:1, charcos:0, eventos:2, banda:1, apoyo:true},
+ {n:2,  nombre:"El camino de tierra",  cielo:"#B9DFEE", lejos:"#B4C98C", suelo:"#C2A472", tierra:"#A5844F", adorno:"cerca",   largo:2700, huecos:1, cubos:4, plataformas:2, charcos:1, eventos:2, banda:1, apoyo:true},
+ {n:3,  nombre:"El bosque",            cielo:"#A8CFE0", lejos:"#5E9152", suelo:"#79A85E", tierra:"#8A6A44", adorno:"arboles", largo:3000, huecos:2, cubos:5, plataformas:3, charcos:1, eventos:2, banda:1, apoyo:true},
+ {n:4,  nombre:"El pueblo de juguetes",cielo:"#C6E6F4", lejos:"#D8B98F", suelo:"#B8B06E", tierra:"#9A8552", adorno:"casas",   largo:3200, huecos:2, cubos:5, plataformas:3, charcos:2, eventos:2, banda:2, apoyo:false},
+ {n:5,  nombre:"El río",               cielo:"#AEDCEB", lejos:"#79B8C4", suelo:"#8FBF6A", tierra:"#7E9A6B", adorno:"agua",    largo:3500, huecos:3, cubos:6, plataformas:4, charcos:2, eventos:2, banda:2, apoyo:false},
+ {n:6,  nombre:"Las colinas al atardecer",cielo:"#F2C48A", lejos:"#C98F6B", suelo:"#9A8A52", tierra:"#7A6338", adorno:"colinas",largo:3800,huecos:3, cubos:6, plataformas:4, charcos:3, eventos:2, banda:2, apoyo:false},
+ {n:7,  nombre:"El cañón rojo",        cielo:"#EFB98F", lejos:"#B5643F", suelo:"#C08050", tierra:"#8E4F2E", adorno:"rocas",   largo:4100, huecos:4, cubos:7, plataformas:5, charcos:3, eventos:2, banda:2, apoyo:false},
+ {n:8,  nombre:"La noche estrellada",  cielo:"#3E5A78", lejos:"#2C4159", suelo:"#4E6B4A", tierra:"#38492F", adorno:"estrellas",largo:4400,huecos:4, cubos:7, plataformas:5, charcos:3, eventos:4, banda:3, apoyo:false},
+ {n:9,  nombre:"Sobre las nubes",      cielo:"#CBE4F0", lejos:"#E6F1F7", suelo:"#DCE9F2", tierra:"#B9CFDE", adorno:"nubes",   largo:4700, huecos:5, cubos:8, plataformas:6, charcos:2, eventos:4, banda:3, apoyo:false},
+ {n:10, nombre:"El amanecer",          cielo:"#F6D9A8", lejos:"#EFAE8C", suelo:"#9FBF6A", tierra:"#A5844F", adorno:"amanecer",largo:5000, huecos:5, cubos:8, plataformas:6, charcos:3, eventos:4, banda:3, apoyo:false}
+];
+
+const PERSONAJES = {
+  "Woody":         {color:"#E0B24A", sombrero:true,  alto:44},
+  "Buzz":          {color:"#7FB8E0", casco:true,     alto:44},
+  "Jessie":        {color:"#E4736B", trenza:true,    alto:44},
+  "Rex":           {color:"#7BC47F", cola:true,      alto:48},
+  "Tiro al Blanco":{color:"#D9A86C", caballo:true,   alto:46}
+};
+
+/* ---------------------------------------------------------------------------
+   3. SONIDO — solo efectos, nunca música
+   --------------------------------------------------------------------------- */
+const Sonido = (function(){
+  let ctx = null;
+  let encendido = true;
+  function activar(){
+    if(!ctx){
+      try{ const AC = window.AudioContext || window.webkitAudioContext; if(AC) ctx = new AC(); }
+      catch(e){ ctx = null; }
+    }
+    if(ctx && ctx.state === "suspended"){ try{ ctx.resume(); }catch(e){} }
+  }
+  function tono(frec, dur, tipo, vol, retraso){
+    if(!ctx || !encendido) return;
+    try{
+      const t0 = ctx.currentTime + (retraso||0);
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = tipo || "square";
+      osc.frequency.setValueAtTime(frec, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol||0.09, t0+0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0+dur+0.02);
+    }catch(e){}
+  }
+  function barrido(f1, f2, dur, tipo, vol){
+    if(!ctx || !encendido) return;
+    try{
+      const t0 = ctx.currentTime;
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = tipo || "square";
+      osc.frequency.setValueAtTime(f1, t0);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(40,f2), t0+dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol||0.08, t0+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0+dur+0.02);
+    }catch(e){}
+  }
+  function ruido(dur, corte, vol){
+    if(!ctx || !encendido) return;
+    try{
+      const n = Math.floor(ctx.sampleRate * dur);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for(let i=0;i<n;i++){ d[i] = (Math.random()*2-1) * (1 - i/n); }
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const f = ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value = corte||800;
+      const g = ctx.createGain(); g.gain.value = vol||0.16;
+      src.connect(f); f.connect(g); g.connect(ctx.destination);
+      src.start();
+    }catch(e){}
+  }
+  return {
+    activar,
+    silenciar(v){ encendido = !v; },
+    activo(){ return encendido; },
+    saltar(){ barrido(320, 640, 0.14, "square", 0.07); },
+    caer(){ barrido(420, 180, 0.16, "sine", 0.06); },
+    moneda(){ tono(988,0.07,"triangle",0.10,0); tono(1319,0.13,"triangle",0.10,0.06); },
+    cubo(){ tono(180,0.09,"square",0.10); ruido(0.06, 500, 0.08); },
+    estrella(){ tono(659,0.10,"triangle",0.10,0); tono(880,0.10,"triangle",0.10,0.09); tono(1175,0.20,"triangle",0.11,0.18); },
+    paraguas(){ ruido(0.22, 1600, 0.10); tono(520,0.10,"sine",0.05,0.02); },
+    lodo(){ ruido(0.42, 340, 0.22); barrido(200,70,0.4,"sine",0.07); },
+    bano(){ ruido(0.5, 2600, 0.10); tono(784,0.10,"sine",0.06,0.1); tono(1047,0.16,"sine",0.06,0.22); },
+    comprar(){ tono(587,0.08,"triangle",0.09,0); tono(880,0.14,"triangle",0.09,0.07); },
+    bandera(){ [523,659,784,1047].forEach((f,i)=> tono(f,0.16,"triangle",0.10,i*0.13)); },
+    suave(){ tono(392,0.20,"sine",0.06); },
+    pilaBaja(){ tono(260,0.16,"sine",0.06,0); tono(200,0.20,"sine",0.06,0.16); }
+  };
+})();
+
+/* ---------------------------------------------------------------------------
+   4. VOZ — el juego espera a la voz, nunca la corta
+   Lección del escáner: no se recorta el habla para que quepa en el ritmo del
+   juego; el juego se detiene hasta que la voz termina.
+   --------------------------------------------------------------------------- */
+const FILTRO_NOMBRE = /^\s*[^:\n]{1,24}:\s*/;   // quita "Woody: " antes de hablar
+
+const Voz = (function(){
+  let vozEs = null, listo = false, activa = true;
+  function elegirVoz(){
+    if(!("speechSynthesis" in window)) return null;
+    const vs = window.speechSynthesis.getVoices() || [];
+    vozEs = vs.find(v=>/^es(-|_)?(MX|US|419)/i.test(v.lang))
+         || vs.find(v=>/^es/i.test(v.lang)) || null;
+    listo = true;
+    return vozEs;
+  }
+  if("speechSynthesis" in window){
+    elegirVoz();
+    window.speechSynthesis.onvoiceschanged = elegirVoz;
+  }
+  /* limpiar: quita el prefijo de nombre y las comillas angulares del resaltado */
+  function limpiar(texto){
+    return String(texto||"").replace(FILTRO_NOMBRE,"").replace(/[«»]/g,"").trim();
+  }
+  /* esperaVoz: promesa que resuelve cuando la voz TERMINÓ de decir la frase */
+  function esperaVoz(texto){
+    return new Promise(function(resolver){
+      const limpio = limpiar(texto);
+      if(!activa || !limpio || !("speechSynthesis" in window)){ resolver(); return; }
+      let resuelto = false;
+      const acabar = function(){ if(!resuelto){ resuelto = true; resolver(); } };
+      try{
+        const u = new SpeechSynthesisUtterance(limpio);
+        u.lang = "es-MX"; u.rate = 0.92; u.pitch = 1.06;
+        if(vozEs) u.voice = vozEs;
+        u.onend = acabar; u.onerror = acabar;
+        /* red de seguridad: si el motor no avisa, no dejamos el juego colgado */
+        const msEstimados = 900 + limpio.length * 88;
+        setTimeout(acabar, msEstimados + 2500);
+        window.speechSynthesis.speak(u);
+      }catch(e){ acabar(); }
+    });
+  }
+  return {
+    esperaVoz, limpiar,
+    silenciar(v){
+      activa = !v;
+      /* Única cancelación permitida: la niña apagó la voz a propósito. */
+      if(v && "speechSynthesis" in window){ try{ window.speechSynthesis.cancel(); }catch(e){} }
+    },
+    activa(){ return activa; },
+    lista(){ return listo; }
+  };
+})();
+</script>
+<script>
+"use strict";
+/* ---------------------------------------------------------------------------
+   5. ESTADO Y REGISTRO DE CUMPLIMIENTO
+   --------------------------------------------------------------------------- */
+const MUNDO_ALTO = 400, SUELO_Y = 318;
+const GRAV = 0.62, FUERZA_SALTO = -12.6, VEL = 3.5, VEL_EMBARRADO = 2.35;
+const ROBOT_ANCHO = 40, ROBOT_ALTO = 56, ROBOT_ALTO_AGACHADO = 34;
+
+/* ---------------------------------------------------------------------------
+   PERDÓN DE SALTO — para manos de 6 años, no para manos de speedrunner.
+   COYOTE: sigue valiendo el salto durante unos cuadros DESPUÉS de pisar el
+   borde. Es el error de reacción típico de una niña: pulsa tarde.
+   BUFFER: si pulsa un poco ANTES de aterrizar, el salto no se pierde.
+   Ninguno de los dos cambia la velocidad ni el impulso: solo perdonan el
+   momento exacto del dedo, que es donde se rompía el juego.
+   --------------------------------------------------------------------------- */
+const COYOTE_CUADROS = 7, BUFFER_CUADROS = 7;
+
+/* ---------------------------------------------------------------------------
+   ANCHO MÁXIMO DE HUECO — se calcula simulando la parábola real, no a ojo.
+   Caso peor: el robot EMBARRADO, que va más lento. Embarrarse es normal (pasa
+   al fallar una palabra o pisar un charco), así que un hueco que solo se cruza
+   estando limpia convertiría un error de lectura en un muro. No se permite.
+   --------------------------------------------------------------------------- */
+const MAX_HUECO = (function(){
+  let y = 0, vy = FUERZA_SALTO, x = 0, n = 0;
+  while(n < 600){
+    vy += GRAV; if(vy > 16) vy = 16;
+    x += VEL_EMBARRADO; y += vy; n++;
+    if(vy >= 0 && y >= 0) break;
+  }
+  /* No basta con que el salto "llegue" en el papel. Si el hueco mide casi lo
+     mismo que el alcance, la ventana de despegue se reduce a unos pocos píxeles
+     y solo funciona con timing de milésimas: eso es un hueco roto para una niña
+     de 6 años. Se reserva una ventana de despegue amplia. */
+  const VENTANA_DESPEGUE = 50;
+  return Math.floor(x) - VENTANA_DESPEGUE;
+})();
+const PISO_MINIMO = ROBOT_ANCHO + 16; // suelo mínimo entre dos huecos
+
+const estado = {
+  nivel: 1,
+  monedas: 0,
+  estrellas: 0,
+  estrellasNivel: 0,
+  pila: 100,
+  embarrado: false,
+  sombrero: null,
+  colorRobot: "#F4F6F2",
+  x: 60, y: SUELO_Y - ROBOT_ALTO, vx: 0, vy: 0,
+  enSuelo: true, agachado: false, mirando: 1,
+  coyote: 0, buffer: 0,
+  camara: 0,
+  jugando: false,
+  pausadoPorTexto: false,        // ← mientras hay texto, el mundo y la pila se detienen
+  lluviaActiva: 0,
+  brilloParaguas: 0,
+  mundo: null,
+  colaEventos: [],
+  reprogramados: [],
+  registro: {},
+  ultimoSeguro: {x:60, y:SUELO_Y-ROBOT_ALTO},
+  parity: []                      // bitácora de paridad audio-visual (G11/G12)
+};
+
+const teclas = {izq:false, der:false, arriba:false, abajo:false};
+
+/* Registro de cumplimiento por palabra */
+function anotar(item, acertoPrimera, fueReensenada){
+  const r = estado.registro[item.id] || (estado.registro[item.id] = {
+    palabra:item.palabra, banda:item.banda, apoyo:false,
+    vistas:0, intentos:0, aciertosPrimera:0, fallos:0, reensenada:false, resuelta:false
+  });
+  r.intentos++;
+  if(acertoPrimera) r.aciertosPrimera++;
+  else r.fallos++;
+  if(fueReensenada) r.reensenada = true;
+  return r;
+}
+
+/* ---------------------------------------------------------------------------
+   6. GENERADOR DE NIVELES (determinista → mismo nivel, mismo mapa)
+   --------------------------------------------------------------------------- */
+function semilla(n){ let s = n*9301 + 49297; return function(){ s = (s*9301 + 49297) % 233280; return s/233280; }; }
+
+function construirNivel(n){
+  const esc = ESCENAS[n-1];
+  const azar = semilla(n*7+3);
+  const m = {
+    esc, largo: esc.largo,
+    huecos:[], plataformas:[], cubos:[], monedas:[], charcos:[],
+    zonas:[], disparadores:[], bandera:{x:esc.largo-120, abajo:false}, adornos:[]
+  };
+
+  /* huecos en el suelo, nunca al principio ni pegados a la bandera */
+  const anchoMin = Math.max(34, Math.floor(MAX_HUECO*0.55));
+  for(let i=0;i<esc.huecos;i++){
+    let x = 420 + Math.floor(azar()*(esc.largo-900));
+    const w = anchoMin + Math.floor(azar()*(MAX_HUECO-anchoMin+1));
+    /* separación garantizada: dos huecos pegados dejan de ser dos huecos y
+       pasan a ser uno del doble de ancho, que ya no se puede saltar. */
+    let choca = true, vueltas = 0;
+    while(choca && vueltas < 60){
+      choca = m.huecos.some(function(h){
+        return x < h.x + h.w + PISO_MINIMO && h.x < x + w + PISO_MINIMO;
+      });
+      if(choca){ x = 420 + Math.floor(azar()*(esc.largo-900)); vueltas++; }
+    }
+    if(!choca) m.huecos.push({x, w});
+  }
+  m.huecos.sort((a,b)=>a.x-b.x);
+
+  /* plataformas flotantes */
+  for(let i=0;i<esc.plataformas;i++){
+    const x = 300 + Math.floor(azar()*(esc.largo-700));
+    m.plataformas.push({x, y: SUELO_Y - (78 + Math.floor(azar()*70)), w: 96 + Math.floor(azar()*60), h:16});
+  }
+
+  /* cubos de interrogación */
+  for(let i=0;i<esc.cubos;i++){
+    const x = 260 + Math.floor(azar()*(esc.largo-560));
+    m.cubos.push({x, y: SUELO_Y - (104 + Math.floor(azar()*46)), w:36, h:36, usado:false});
+  }
+
+  /* monedas sueltas por el camino */
+  const cuantas = 10 + n*2;
+  for(let i=0;i<cuantas;i++){
+    const x = 200 + Math.floor(azar()*(esc.largo-420));
+    m.monedas.push({x, y: SUELO_Y - (44 + Math.floor(azar()*110)), tomada:false});
+  }
+
+  /* charcos de lodo en el suelo */
+  for(let i=0;i<esc.charcos;i++){
+    const x = 500 + Math.floor(azar()*(esc.largo-1000));
+    m.charcos.push({x, w: 62 + Math.floor(azar()*40)});
+  }
+
+  /* zonas: tienda, baño y estilo, repartidas a lo largo */
+  m.zonas.push({tipo:"tienda", x: Math.floor(esc.largo*0.30), w:70, nombre:"Tienda"});
+  m.zonas.push({tipo:"bano",   x: Math.floor(esc.largo*0.58), w:70, nombre:"Baño"});
+  m.zonas.push({tipo:"estilo", x: Math.floor(esc.largo*0.78), w:70, nombre:"Ropa y color"});
+
+  /* disparadores de vocabulario, repartidos y lejos de los huecos */
+  const primerX = Math.floor(esc.largo*0.16);
+  const paso = Math.floor((esc.largo*0.74)/esc.eventos);
+  for(let i=0;i<esc.eventos;i++){
+    m.disparadores.push({x: primerX + paso*i, usado:false});
+  }
+
+  /* adornos del escenario */
+  for(let i=0;i<Math.floor(esc.largo/170);i++){
+    m.adornos.push({x: i*170 + Math.floor(azar()*80), t: azar(), s: 0.7+azar()*0.7});
+  }
+  return m;
+}
+
+/* elegir las palabras del nivel: reprogramadas primero, luego repaso, luego nuevas */
+function palabrasDelNivel(n){
+  const esc = ESCENAS[n-1];
+  const lista = [];
+  /* 1) lo que falló antes vuelve (repetición espaciada) */
+  while(estado.reprogramados.length && lista.length < esc.eventos){
+    lista.push(estado.reprogramados.shift());
+  }
+  /* 2) palabras nuevas de la banda del nivel: el contenido no se queda sin sitio */
+  const usadas = new Set(Object.keys(estado.registro));
+  const nuevas = VOCABULARIO.filter(v=>v.banda===esc.banda && !usadas.has(v.id) && !lista.some(l=>l.id===v.id));
+  while(lista.length < esc.eventos && nuevas.length){
+    const cand = nuevas.shift();
+    if(!cand.par){ lista.push(cand); continue; }
+    /* las dos caras de una palabra polisémica van juntas o no van:
+       separadas no enseñan nada, porque el contraste ES la lección */
+    const gemela = nuevas.find(v=>v.par===cand.par);
+    if(!gemela){ lista.push(cand); continue; }
+    if(lista.length + 2 <= esc.eventos){
+      nuevas.splice(nuevas.indexOf(gemela), 1);
+      lista.push(cand, gemela);
+    }else{
+      nuevas.unshift(cand);   // no cabe el par entero: espera al nivel siguiente
+      break;
+    }
+  }
+  /* 3) el repaso espaciado ocupa lo que sobre */
+  (REPASO[n]||[]).forEach(function(id){
+    if(lista.length < esc.eventos){
+      const it = VOCABULARIO.find(v=>v.id===id);
+      if(it && !lista.some(l=>l.id===it.id)) lista.push(it);
+    }
+  });
+  /* 4) red de seguridad: si se acabaron, reciclar cualquiera de la banda */
+  const fondo = VOCABULARIO.filter(v=>v.banda===esc.banda);
+  let k=0;
+  while(lista.length < esc.eventos && fondo.length){ lista.push(fondo[k++ % fondo.length]); }
+  return lista.slice(0, esc.eventos);
+}
+
+/* ---------------------------------------------------------------------------
+   7. DIÁLOGO — única puerta por la que sale texto.
+   Lo que se ve y lo que se oye son la MISMA cadena (paridad G11/G12).
+   --------------------------------------------------------------------------- */
+const capaDialogo = document.getElementById("capaDialogo");
+const elNombre    = document.getElementById("nombreQuienHabla");
+const elRetrato   = document.getElementById("retrato");
+const elTexto     = document.getElementById("textoDialogo");
+const elOpciones  = document.getElementById("opciones");
+const btnSeguir   = document.getElementById("seguirCartel");
+
+function escapar(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* marca visual: «pista» va resaltada, la palabra nueva va subrayada.
+   Ninguna de las dos cambia la cadena que se pronuncia. */
+function conMarcas(texto, pista, palabraNueva){
+  let html = escapar(texto);
+  if(pista){
+    const p = escapar(pista);
+    html = html.replace(p, '<span class="clave">'+p+'</span>');
+  }
+  if(palabraNueva){
+    const re = new RegExp("\\b("+escapar(palabraNueva).replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\w*)\\b","i");
+    html = html.replace(re, '<span class="palabraNueva">$1</span>');
+  }
+  return html;
+}
+
+function retratoDe(quien){
+  const p = PERSONAJES[quien];
+  const c = p ? p.color : "#DDD";
+  return '<svg viewBox="0 0 40 40" width="32" height="32" aria-hidden="true">'+
+         '<circle cx="20" cy="20" r="15" fill="'+c+'" stroke="#3A9B4C" stroke-width="2"/>'+
+         '<circle cx="15" cy="18" r="2.6" fill="#2F3A2F"/><circle cx="25" cy="18" r="2.6" fill="#2F3A2F"/>'+
+         '<path d="M14 26 q6 5 12 0" stroke="#2F3A2F" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+}
+
+/* mostrar un cartel y ESPERAR a que la voz termine */
+function decir(quien, texto, opciones){
+  opciones = opciones || {};
+  estado.pausadoPorTexto = true;
+  capaDialogo.classList.add("visible");
+  elNombre.textContent = quien || "";
+  elRetrato.innerHTML = quien ? retratoDe(quien) : "";
+  elTexto.innerHTML = conMarcas(texto, opciones.pista, opciones.palabraNueva);
+  elOpciones.innerHTML = "";
+  btnSeguir.style.display = "";
+  btnSeguir.disabled = true;
+  btnSeguir.textContent = opciones.etiquetaSeguir || "Seguir";
+
+  /* paridad: lo mostrado y lo enviado a la voz son la misma cadena */
+  estado.parity.push({mostrado: elTexto.textContent, hablado: texto});
+
+  return Voz.esperaVoz(texto).then(function(){
+    btnSeguir.disabled = false;
+    btnSeguir.focus();
+    return new Promise(function(resolver){
+      btnSeguir.onclick = function(){
+        btnSeguir.onclick = null;
+        cerrarDialogo();
+        resolver();
+      };
+    });
+  });
+}
+
+/* mostrar cartel con opciones: las opciones también se dicen en voz */
+function preguntar(quien, texto, opts, extra){
+  extra = extra || {};
+  estado.pausadoPorTexto = true;
+  capaDialogo.classList.add("visible");
+  elNombre.textContent = quien || "";
+  elRetrato.innerHTML = quien ? retratoDe(quien) : "";
+  elTexto.innerHTML = conMarcas(texto, extra.pista, extra.palabraNueva);
+  btnSeguir.style.display = "none";
+  elOpciones.innerHTML = "";
+
+  const textoOpciones = opts.map(o=>o.texto).join(". ");
+  estado.parity.push({mostrado: elTexto.textContent, hablado: texto});
+  estado.parity.push({mostrado: textoOpciones, hablado: textoOpciones});
+
+  return Voz.esperaVoz(texto).then(function(){
+    return Voz.esperaVoz(textoOpciones);
+  }).then(function(){
+    return new Promise(function(resolver){
+      opts.forEach(function(o){
+        const b = document.createElement("button");
+        b.className = "opcion " + (o.clase||"");
+        b.innerHTML = (o.icono||"") + "<span>" + escapar(o.texto) + "</span>";
+        b.onclick = function(){ cerrarDialogo(); resolver(o.valor); };
+        elOpciones.appendChild(b);
+      });
+      const primero = elOpciones.querySelector("button");
+      if(primero) primero.focus();
+    });
+  });
+}
+
+function cerrarDialogo(){
+  capaDialogo.classList.remove("visible");
+  elOpciones.innerHTML = "";
+  estado.pausadoPorTexto = false;
+}
+
+const elAviso = document.getElementById("aviso");
+let avisoTimer = null;
+function avisar(txt){
+  elAviso.textContent = txt;
+  elAviso.classList.add("visible");
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(function(){ elAviso.classList.remove("visible"); }, 1700);
+}
+
+/* ---------------------------------------------------------------------------
+   8. EL EVENTO CENTRAL: la palabra nueva
+   La palabra no se define. Solo se infiere del resto de la frase.
+   La consecuencia es física. El error abre reenseñanza y reprograma.
+   --------------------------------------------------------------------------- */
+/* Tabla de ritmo: cuánto dura cada momento sin texto en pantalla.
+   Está fuera del código para poder afinar el pulso del juego sin tocarlo. */
+const RITMO = {lodoCae:1500, solQueda:500, agachadaDeMas:1100};
+
+const ICONO_PARAGUAS = '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12a10 10 0 0120 0z" fill="#5B9BC4" stroke="#27703A" stroke-width="1.6"/><path d="M12 12v7a2.5 2.5 0 01-5 0" fill="none" stroke="#27703A" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICONO_CORRER  = '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#F2D45C" stroke="#27703A" stroke-width="1.6"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="#27703A" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+async function eventoPalabra(item){
+  const esc = ESCENAS[estado.nivel-1];
+  const conApoyo = esc.apoyo === true;
+  const reg = estado.registro[item.id];
+  const yaVista = !!reg;
+  if(reg) reg.vistas++;
+
+  /* 1) El aviso. La palabra aparece marcada, la pista NO se resalta todavía:
+        resaltarla ahora sería regalar la inferencia. */
+  await decir(item.quien, item.frase, {palabraNueva:item.palabra});
+
+  /* 2) Apoyo pictórico solo en la banda 1 */
+  if(conApoyo && item.apoyo){
+    estado.apoyoVisible = item.apoyo;
+  }
+
+  /* 3) La decisión */
+  const eleccion = await preguntar(
+    "Mia",
+    "¿Qué hace el robot?",
+    [
+      {texto:"Me agacho con el paraguas", valor:"paraguas", clase:"paraguas", icono:ICONO_PARAGUAS},
+      {texto:"Sigo corriendo",            valor:"correr",   clase:"seguir",   icono:ICONO_CORRER}
+    ]
+  );
+  estado.apoyoVisible = null;
+
+  const acerto = (eleccion === "paraguas") === item.lodo;
+  const primeraVez = !yaVista;
+  anotar(item, acerto && primeraVez ? true : false, false);
+  if(estado.registro[item.id]) estado.registro[item.id].apoyo = conApoyo;
+
+  if(acerto){
+    if(item.lodo){
+      estado.brilloParaguas = 150;
+      estado.agachado = true;
+      estado.lluviaActiva = 150;
+      Sonido.paraguas();
+      await esperarMs(RITMO.lodoCae);
+      Sonido.estrella();
+      await decir(item.quien, "Cayó el lodo y tú ya estabas debajo del paraguas. Leíste la pista antes de decidir: «"+item.pista+"». Eso es lo que te salvó.", {pista:item.pista});
+    }else{
+      estado.lluviaActiva = 0;
+      Sonido.estrella();
+      await esperarMs(RITMO.solQueda);
+      await decir(item.quien, "No cayó nada y no perdiste tiempo agachada. Te fijaste en «"+item.pista+"» y por eso seguiste. Buen método.", {pista:item.pista});
+    }
+    estado.estrellas++; estado.estrellasNivel++;
+    if(estado.registro[item.id]) estado.registro[item.id].resuelta = true;
+    actualizarMarcador();
+    avisar("★ una estrella más");
+  }else{
+    /* 4) CONSECUENCIA FÍSICA, no un cartel de "incorrecto" */
+    if(item.lodo){
+      estado.lluviaActiva = 170;
+      estado.agachado = false;
+      Sonido.lodo();
+      await esperarMs(RITMO.lodoCae);
+      estado.embarrado = true;
+      actualizarMarcador();
+    }else{
+      estado.agachado = true;
+      estado.brilloParaguas = 120;
+      Sonido.suave();
+      await esperarMs(RITMO.agachadaDeMas);
+      estado.agachado = false;
+    }
+    /* 5) REENSEÑANZA: vuelve la frase, ahora sí con la pista resaltada */
+    await decir(item.quien, item.frase, {pista:item.pista, palabraNueva:item.palabra});
+    await decir(item.quien, item.reensena, {pista:item.pista});
+    anotar(item, false, true);
+    /* 6) REPROGRAMAR: la palabra vuelve más adelante, no se pierde */
+    if(!estado.reprogramados.some(v=>v.id===item.id)) estado.reprogramados.push(item);
+    estado.colaEventos.push(item);
+    await decir("Jessie", "Esa palabra vuelve más adelante, Mia. Ahora ya sabes dónde mirar: en el resto de la frase.");
+    avisar("La palabra vuelve luego");
+  }
+  guardar();
+}
+
+function esperarMs(ms){ return new Promise(r=>setTimeout(r, ms)); }
+</script>
+<script>
+"use strict";
+/* ---------------------------------------------------------------------------
+   9. DIBUJO — todo con trazo tembloroso, como el dibujo de Mia
+   --------------------------------------------------------------------------- */
+const lienzo = document.getElementById("lienzo");
+const cx = lienzo.getContext ? lienzo.getContext("2d") : null;
+let escala = 1, anchoVista = 640;
+
+function ajustarLienzo(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth, h = window.innerHeight;
+  lienzo.width = Math.floor(w*dpr); lienzo.height = Math.floor(h*dpr);
+  escala = (h*dpr)/MUNDO_ALTO;
+  anchoVista = (w*dpr)/escala;
+  if(cx){ cx.setTransform(escala,0,0,escala,0,0); cx.imageSmoothingEnabled = true; }
+}
+window.addEventListener("resize", ajustarLienzo);
+
+/* trazo tembloroso determinista: no vibra entre cuadros */
+function temblor(i){ return ((Math.sin(i*12.9898)*43758.5453)%1)*1.6 - 0.8; }
+
+function rectLapiz(x,y,w,h,relleno,borde,grosor,semilla){
+  if(!cx) return;
+  const s = semilla||0;
+  cx.beginPath();
+  cx.moveTo(x+temblor(s),      y+temblor(s+1));
+  cx.lineTo(x+w+temblor(s+2),  y+temblor(s+3));
+  cx.lineTo(x+w+temblor(s+4),  y+h+temblor(s+5));
+  cx.lineTo(x+temblor(s+6),    y+h+temblor(s+7));
+  cx.closePath();
+  if(relleno){ cx.fillStyle = relleno; cx.fill(); }
+  if(borde){ cx.strokeStyle = borde; cx.lineWidth = grosor||2.4; cx.lineJoin="round"; cx.stroke(); }
+}
+
+function circuloLapiz(x,y,r,relleno,borde,grosor){
+  if(!cx) return;
+  cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2);
+  if(relleno){ cx.fillStyle = relleno; cx.fill(); }
+  if(borde){ cx.strokeStyle = borde; cx.lineWidth = grosor||2.2; cx.stroke(); }
+}
+
+function estrellaLapiz(x,y,r,relleno,borde){
+  if(!cx) return;
+  cx.beginPath();
+  for(let i=0;i<10;i++){
+    const ang = -Math.PI/2 + i*Math.PI/5;
+    const rr = i%2 ? r*0.44 : r;
+    const px = x+Math.cos(ang)*rr, py = y+Math.sin(ang)*rr;
+    i ? cx.lineTo(px,py) : cx.moveTo(px,py);
+  }
+  cx.closePath();
+  cx.fillStyle = relleno; cx.fill();
+  cx.strokeStyle = borde || "#3A9B4C"; cx.lineWidth = 2; cx.lineJoin="round"; cx.stroke();
+}
+
+/* rayado de lápiz sobre el cielo, como en el dibujo */
+function rayarCielo(esc, cam){
+  if(!cx) return;
+  cx.save();
+  cx.globalAlpha = 0.16; cx.strokeStyle = "#6FA8C6"; cx.lineWidth = 2.2;
+  const paso = 26, desf = -(cam*0.25) % paso;
+  for(let y=10;y<SUELO_Y-60;y+=paso){
+    cx.beginPath();
+    for(let x=-40;x<anchoVista+40;x+=22){
+      const yy = y + Math.sin((x+desf+y)*0.05)*3;
+      x===-40 ? cx.moveTo(x,yy) : cx.lineTo(x,yy);
+    }
+    cx.stroke();
+  }
+  cx.restore();
+}
+
+function dibujarAdorno(a, esc, px){
+  const tipo = esc.adorno, base = SUELO_Y;
+  const s = a.s;
+  switch(tipo){
+    case "flores":
+      circuloLapiz(px, base-16*s, 6*s, "#F2D45C", "#3A9B4C", 2);
+      cx.strokeStyle="#3A9B4C"; cx.lineWidth=2;
+      cx.beginPath(); cx.moveTo(px, base-10*s); cx.lineTo(px, base); cx.stroke();
+      break;
+    case "cerca":
+      rectLapiz(px, base-40*s, 8, 40*s, "#C9A87C", "#8A6A44", 2, a.x);
+      rectLapiz(px-16, base-30*s, 40, 7, "#C9A87C", "#8A6A44", 2, a.x+9);
+      break;
+    case "arboles":
+      rectLapiz(px+8, base-42*s, 11, 42*s, "#8A6A44", "#5E4A2E", 2, a.x);
+      circuloLapiz(px+13, base-56*s, 24*s, "#5E9152", "#27703A", 2.4);
+      break;
+    case "casas":
+      rectLapiz(px, base-46*s, 52*s, 46*s, "#F4E3C8", "#3A9B4C", 2.6, a.x);
+      cx.beginPath(); cx.moveTo(px-4, base-46*s); cx.lineTo(px+26*s, base-70*s); cx.lineTo(px+56*s, base-46*s);
+      cx.fillStyle="#E4736B"; cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.4; cx.stroke();
+      rectLapiz(px+18*s, base-26*s, 16*s, 26*s, "#C9A87C", "#3A9B4C", 2, a.x+5);
+      break;
+    case "agua":
+      cx.strokeStyle="#79B8C4"; cx.lineWidth=3; cx.beginPath();
+      for(let k=0;k<3;k++){ cx.moveTo(px, base-8-k*7); cx.quadraticCurveTo(px+18, base-14-k*7, px+38, base-8-k*7); }
+      cx.stroke(); break;
+    case "colinas":
+      cx.beginPath(); cx.moveTo(px-40, base); cx.quadraticCurveTo(px+10, base-58*s, px+62, base);
+      cx.fillStyle="#C98F6B"; cx.fill(); cx.strokeStyle="#8E5F42"; cx.lineWidth=2.2; cx.stroke(); break;
+    case "rocas":
+      cx.beginPath(); cx.moveTo(px-20, base); cx.lineTo(px-4, base-40*s); cx.lineTo(px+16, base-22*s); cx.lineTo(px+32, base);
+      cx.closePath(); cx.fillStyle="#B5643F"; cx.fill(); cx.strokeStyle="#8E4F2E"; cx.lineWidth=2.4; cx.stroke(); break;
+    case "estrellas":
+      estrellaLapiz(px, 60+((a.t*120)|0), 8*s, "#F2D45C", "#E8E2C0"); break;
+    case "nubes":
+      circuloLapiz(px, 90+a.t*70, 20*s, "#FFFFFF", "#CBE4F0", 2);
+      circuloLapiz(px+22*s, 96+a.t*70, 15*s, "#FFFFFF", "#CBE4F0", 2); break;
+    case "amanecer":
+      circuloLapiz(px, base-14*s, 7*s, "#EFAE8C", "#C97B57", 2);
+      estrellaLapiz(px+40, 70+a.t*60, 6*s, "#F6D9A8", "#EFAE8C"); break;
+  }
+}
+
+function dibujarPersonaje(quien, px, py, mira){
+  const p = PERSONAJES[quien]; if(!p || !cx) return;
+  const alto = p.alto, ancho = 26;
+  const base = py;
+  /* cuerpo */
+  rectLapiz(px-ancho/2, base-alto, ancho, alto, p.color, "#3A9B4C", 2.6, px);
+  /* cabeza */
+  circuloLapiz(px, base-alto-13, 14, "#F6E7D2", "#3A9B4C", 2.4);
+  /* ojos */
+  circuloLapiz(px-5, base-alto-15, 2.6, "#2F3A2F", null);
+  circuloLapiz(px+5, base-alto-15, 2.6, "#2F3A2F", null);
+  cx.strokeStyle="#2F3A2F"; cx.lineWidth=1.8; cx.beginPath();
+  cx.arc(px, base-alto-9, 5, 0.15*Math.PI, 0.85*Math.PI); cx.stroke();
+  if(p.sombrero){
+    cx.beginPath(); cx.ellipse(px, base-alto-24, 20, 5, 0, 0, Math.PI*2);
+    cx.fillStyle="#C9873F"; cx.fill(); cx.strokeStyle="#8A5A28"; cx.lineWidth=2; cx.stroke();
+    rectLapiz(px-9, base-alto-34, 18, 11, "#C9873F", "#8A5A28", 2, px+3);
+  }
+  if(p.casco){
+    cx.beginPath(); cx.arc(px, base-alto-14, 17, Math.PI, 0);
+    cx.fillStyle="rgba(200,235,255,.55)"; cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.4; cx.stroke();
+  }
+  if(p.trenza){
+    cx.strokeStyle="#C0522C"; cx.lineWidth=5; cx.lineCap="round";
+    cx.beginPath(); cx.moveTo(px+12, base-alto-16); cx.quadraticCurveTo(px+24, base-alto+4, px+16, base-alto+16); cx.stroke();
+  }
+  if(p.cola){
+    cx.strokeStyle="#5EA062"; cx.lineWidth=7; cx.lineCap="round";
+    cx.beginPath(); cx.moveTo(px-ancho/2, base-10); cx.quadraticCurveTo(px-34, base-14, px-40, base-2); cx.stroke();
+  }
+  if(p.caballo){
+    rectLapiz(px-24, base-alto+6, 48, alto-14, p.color, "#3A9B4C", 2.6, px+7);
+    cx.strokeStyle="#8A6A44"; cx.lineWidth=4; cx.lineCap="round";
+    [-16,-6,8,18].forEach(function(o,i){ cx.beginPath(); cx.moveTo(px+o, base-10); cx.lineTo(px+o, base); cx.stroke(); });
+  }
+}
+
+/* EL ROBOT DE MIA — copiado del dibujo: arco amarillo, ojos grandes,
+   mejillas rosadas, barra de pila en el pecho y los botones 1, 2 y 3 */
+function dibujarRobot(px, py, alto, agachado){
+  if(!cx) return;
+  const w = ROBOT_ANCHO, base = py + alto;
+  const cuerpo = estado.embarrado ? "#B39B7E" : estado.colorRobot;
+
+  /* arco amarillo (la antena que sale por arriba a la izquierda) */
+  cx.strokeStyle = "#E8C24A"; cx.lineWidth = 7; cx.lineCap="round"; cx.lineJoin="round";
+  cx.beginPath();
+  cx.moveTo(px-4, base-alto+8);
+  cx.lineTo(px-4, base-alto-16);
+  cx.lineTo(px+w+2, base-alto-16);
+  cx.lineTo(px+w+2, base-alto+4);
+  cx.stroke();
+  cx.strokeStyle = "#3A9B4C"; cx.lineWidth = 1.6; cx.stroke();
+
+  /* cuerpo */
+  rectLapiz(px, base-alto, w, alto, cuerpo, "#3A9B4C", 3, px);
+
+  if(!agachado){
+    /* ojos */
+    circuloLapiz(px+13, base-alto+18, 8.5, "#BFE3D2", "#3A9B4C", 2.2);
+    circuloLapiz(px+28, base-alto+18, 8.5, "#BFE3D2", "#3A9B4C", 2.2);
+    circuloLapiz(px+13, base-alto+19, 4.4, "#1E2820", null);
+    circuloLapiz(px+28, base-alto+19, 4.4, "#1E2820", null);
+    circuloLapiz(px+11.4, base-alto+17, 1.5, "#FFFFFF", null);
+    circuloLapiz(px+26.4, base-alto+17, 1.5, "#FFFFFF", null);
+    /* cejas */
+    cx.strokeStyle="#1E2820"; cx.lineWidth=2.2; cx.lineCap="round";
+    cx.beginPath(); cx.moveTo(px+7, base-alto+8);  cx.lineTo(px+18, base-alto+6);  cx.stroke();
+    cx.beginPath(); cx.moveTo(px+23, base-alto+6); cx.lineTo(px+34, base-alto+8); cx.stroke();
+    /* mejillas */
+    cx.globalAlpha=.55;
+    circuloLapiz(px+7,  base-alto+27, 5, "#E4736B", null);
+    circuloLapiz(px+33, base-alto+27, 5, "#E4736B", null);
+    cx.globalAlpha=1;
+    /* boca */
+    cx.fillStyle="#B4443C"; cx.beginPath();
+    cx.ellipse(px+20.5, base-alto+30, 4, 3, 0, 0, Math.PI*2); cx.fill();
+    cx.strokeStyle="#3A9B4C"; cx.lineWidth=1.6; cx.stroke();
+    /* barra de pila en el pecho */
+    const bw = 26, bx = px+7, by = base-alto+38;
+    rectLapiz(bx, by, bw, 8, "#FFFFFF", "#3A9B4C", 2, px+40);
+    const lleno = Math.max(0, Math.min(1, estado.pila/100));
+    cx.fillStyle = lleno > .25 ? "#7BC47F" : "#E4736B";
+    cx.fillRect(bx+1.5, by+1.5, (bw-3)*lleno, 5);
+    /* los tres botones del dibujo */
+    if(alto > 46){
+      const cols=["#F2D45C","#5B9BC4","#E4736B"], nums=["1","2","3"];
+      for(let i=0;i<3;i++){
+        rectLapiz(px+4+i*12, base-11, 10, 9, cols[i], "#3A9B4C", 1.8, px+i*3);
+        cx.fillStyle="#2F3A2F"; cx.font="7px Verdana,sans-serif"; cx.textAlign="center";
+        cx.fillText(nums[i], px+9+i*12, base-4);
+      }
+      cx.textAlign="start";
+    }
+  }else{
+    /* agachado: dos ojos cerrados */
+    cx.strokeStyle="#1E2820"; cx.lineWidth=2.4; cx.lineCap="round";
+    cx.beginPath(); cx.moveTo(px+8,  base-alto+14); cx.lineTo(px+18, base-alto+14); cx.stroke();
+    cx.beginPath(); cx.moveTo(px+23, base-alto+14); cx.lineTo(px+33, base-alto+14); cx.stroke();
+  }
+
+  /* sombrero comprado en la zona de ropa */
+  if(estado.sombrero === "moño"){
+    circuloLapiz(px+w-4, base-alto-20, 6, "#E4736B", "#3A9B4C", 2);
+    circuloLapiz(px+w+7, base-alto-20, 6, "#E4736B", "#3A9B4C", 2);
+  }else if(estado.sombrero === "gorra"){
+    rectLapiz(px+4, base-alto-26, w-8, 10, "#5B9BC4", "#3A9B4C", 2.2, px+11);
+  }else if(estado.sombrero === "corona"){
+    cx.beginPath();
+    cx.moveTo(px+6, base-alto-16); cx.lineTo(px+11, base-alto-28); cx.lineTo(px+20, base-alto-18);
+    cx.lineTo(px+29, base-alto-28); cx.lineTo(px+34, base-alto-16);
+    cx.closePath(); cx.fillStyle="#F2D45C"; cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2; cx.stroke();
+  }
+
+  /* manchas de lodo */
+  if(estado.embarrado){
+    cx.globalAlpha=.75; cx.fillStyle="#6E4726";
+    [[6,14],[30,26],[16,44],[34,10]].forEach(function(p,i){
+      cx.beginPath(); cx.ellipse(px+p[0], base-alto+p[1], 5+i, 4+i*.6, i, 0, Math.PI*2); cx.fill();
+    });
+    cx.globalAlpha=1;
+  }
+
+  /* paraguas cuando está agachada */
+  if(agachado){
+    const ux = px+w/2, uy = base-alto-6;
+    cx.beginPath(); cx.arc(ux, uy, 34, Math.PI, 0);
+    cx.fillStyle="#5B9BC4"; cx.fill();
+    cx.strokeStyle="#27703A"; cx.lineWidth=3; cx.stroke();
+    cx.beginPath(); cx.moveTo(ux, uy); cx.lineTo(ux, uy+16);
+    cx.strokeStyle="#27703A"; cx.lineWidth=3; cx.lineCap="round"; cx.stroke();
+    if(estado.brilloParaguas > 0){
+      cx.globalAlpha = Math.min(.5, estado.brilloParaguas/300);
+      circuloLapiz(ux, uy, 40, "#F2D45C", null); cx.globalAlpha=1;
+    }
+  }
+}
+
+/* lluvia de lodo cayendo del cielo */
+const gotas = [];
+function dibujarLluvia(){
+  if(estado.lluviaActiva <= 0) return;
+  if(gotas.length < 90){
+    for(let i=0;i<5;i++) gotas.push({x:Math.random()*anchoVista, y:-Math.random()*160, v:4+Math.random()*4, r:3+Math.random()*4});
+  }
+  cx.fillStyle="#9C6B3F"; cx.strokeStyle="#6E4726"; cx.lineWidth=1.4;
+  for(let i=gotas.length-1;i>=0;i--){
+    const g = gotas[i];
+    g.y += g.v;
+    cx.beginPath(); cx.ellipse(g.x, g.y, g.r*0.72, g.r, 0, 0, Math.PI*2); cx.fill(); cx.stroke();
+    if(g.y > SUELO_Y+8) gotas.splice(i,1);
+  }
+  /* nube de lodo arriba */
+  cx.fillStyle="#8A5F38";
+  for(let k=0;k<7;k++){
+    cx.beginPath(); cx.arc(k*anchoVista/6, 26+Math.sin(k)*8, 32, 0, Math.PI*2); cx.fill();
+  }
+}
+</script>
+<script>
+"use strict";
+/* ---------------------------------------------------------------------------
+   10. PINTAR UN CUADRO
+   --------------------------------------------------------------------------- */
+function pintar(){
+  if(!cx) return;
+  const m = estado.mundo; if(!m) return;
+  const esc = m.esc, cam = estado.camara;
+
+  cx.setTransform(escala,0,0,escala,0,0);
+  cx.clearRect(0,0,anchoVista,MUNDO_ALTO);
+
+  /* cielo */
+  cx.fillStyle = esc.cielo; cx.fillRect(0,0,anchoVista,MUNDO_ALTO);
+  rayarCielo(esc, cam);
+
+  /* sol o luna, con el apoyo pictórico de la banda 1 */
+  const solX = 66, solY = 68;
+  if(esc.adorno === "estrellas"){
+    circuloLapiz(anchoVista-70, 60, 22, "#E8E2C0", "#B9B48E", 2.4);
+  }else{
+    circuloLapiz(solX, solY, 24, "#F2D45C", "#3A9B4C", 2.6);
+    cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.2; cx.lineCap="round";
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4;
+      cx.beginPath();
+      cx.moveTo(solX+Math.cos(a)*29, solY+Math.sin(a)*29);
+      cx.lineTo(solX+Math.cos(a)*40, solY+Math.sin(a)*40); cx.stroke();
+    }
+    circuloLapiz(solX-8, solY-4, 3, "#2F3A2F", null);
+    circuloLapiz(solX+8, solY-4, 3, "#2F3A2F", null);
+    cx.strokeStyle="#2F3A2F"; cx.lineWidth=2;
+    cx.beginPath(); cx.arc(solX, solY+4, 7, 0.15*Math.PI, 0.85*Math.PI); cx.stroke();
+  }
+  /* apoyo pictórico de la banda 1: una nube o un sol junto al aviso */
+  if(estado.apoyoVisible === "nube"){
+    cx.fillStyle="#7A7A82";
+    for(let k=0;k<4;k++){ cx.beginPath(); cx.arc(anchoVista/2-40+k*26, 74, 24, 0, Math.PI*2); cx.fill(); }
+  }else if(estado.apoyoVisible === "lodo"){
+    cx.fillStyle="#8A5F38";
+    for(let k=0;k<4;k++){ cx.beginPath(); cx.arc(anchoVista/2-40+k*26, 74, 22, 0, Math.PI*2); cx.fill(); }
+  }else if(estado.apoyoVisible === "sol"){
+    circuloLapiz(anchoVista/2, 74, 26, "#F2D45C", "#3A9B4C", 3);
+  }
+
+  /* fondo lejano */
+  cx.fillStyle = esc.lejos;
+  cx.beginPath(); cx.moveTo(0, SUELO_Y-6);
+  for(let x=0;x<=anchoVista+60;x+=60){
+    cx.quadraticCurveTo(x+30, SUELO_Y-58-Math.sin((x+cam*0.3)*0.01)*22, x+60, SUELO_Y-6);
+  }
+  cx.lineTo(anchoVista, MUNDO_ALTO); cx.lineTo(0, MUNDO_ALTO); cx.closePath(); cx.fill();
+
+  /* adornos */
+  m.adornos.forEach(function(a){
+    const px = a.x - cam;
+    if(px > -90 && px < anchoVista+90) dibujarAdorno(a, esc, px);
+  });
+
+  /* suelo, con sus huecos */
+  cx.fillStyle = esc.tierra; cx.fillRect(0, SUELO_Y, anchoVista, MUNDO_ALTO-SUELO_Y);
+  cx.fillStyle = esc.suelo;  cx.fillRect(0, SUELO_Y, anchoVista, 12);
+  cx.fillStyle = esc.cielo;
+  m.huecos.forEach(function(h){
+    const px = h.x - cam;
+    if(px > -h.w-20 && px < anchoVista+20) cx.fillRect(px, SUELO_Y, h.w, MUNDO_ALTO-SUELO_Y);
+  });
+  cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.4;
+  cx.beginPath(); cx.moveTo(0,SUELO_Y);
+  for(let x=0;x<anchoVista;x+=18) cx.lineTo(x, SUELO_Y+Math.sin((x+cam)*0.09)*1.6);
+  cx.stroke();
+
+  /* charcos de lodo */
+  m.charcos.forEach(function(c){
+    const px = c.x - cam;
+    if(px < -c.w-10 || px > anchoVista+10) return;
+    cx.fillStyle="#6E4726";
+    cx.beginPath(); cx.ellipse(px+c.w/2, SUELO_Y+5, c.w/2, 7, 0, 0, Math.PI*2); cx.fill();
+    cx.strokeStyle="#4E3219"; cx.lineWidth=2; cx.stroke();
+  });
+
+  /* plataformas */
+  m.plataformas.forEach(function(p,i){
+    const px = p.x - cam;
+    if(px > -p.w-20 && px < anchoVista+20) rectLapiz(px, p.y, p.w, p.h, esc.suelo, "#3A9B4C", 2.8, i*3);
+  });
+
+  /* cubos de interrogación */
+  m.cubos.forEach(function(c,i){
+    const px = c.x - cam;
+    if(px < -50 || px > anchoVista+50) return;
+    rectLapiz(px, c.y, c.w, c.h, c.usado ? "#C9A87C" : "#D9A85E", "#3A9B4C", 2.8, i*5);
+    if(!c.usado){
+      cx.fillStyle="#5A3E1E"; cx.font="bold 24px Verdana,sans-serif"; cx.textAlign="center";
+      cx.fillText("?", px+c.w/2, c.y+c.h-8); cx.textAlign="start";
+    }
+  });
+
+  /* monedas */
+  m.monedas.forEach(function(mo,i){
+    if(mo.tomada) return;
+    const px = mo.x - cam;
+    if(px < -30 || px > anchoVista+30) return;
+    const flot = Math.sin((Date.now()/320)+i)*3;
+    cx.save(); cx.translate(px, mo.y+flot);
+    cx.beginPath(); cx.ellipse(0,0,8,10,0,0,Math.PI*2);
+    cx.fillStyle="#F2D45C"; cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.2; cx.stroke();
+    cx.fillStyle="#3A9B4C"; cx.font="9px Verdana,sans-serif"; cx.textAlign="center"; cx.fillText("1",0,3);
+    cx.restore(); cx.textAlign="start";
+  });
+
+  /* zonas */
+  m.zonas.forEach(function(z,i){
+    const px = z.x - cam;
+    if(px < -110 || px > anchoVista+110) return;
+    const col = z.tipo==="tienda" ? "#E4C98A" : z.tipo==="bano" ? "#BFE3F2" : "#EFC6DC";
+    rectLapiz(px, SUELO_Y-56, z.w, 56, col, "#3A9B4C", 3, i*7);
+    cx.beginPath(); cx.moveTo(px-6, SUELO_Y-56); cx.lineTo(px+z.w/2, SUELO_Y-78); cx.lineTo(px+z.w+6, SUELO_Y-56);
+    cx.fillStyle="#E4736B"; cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.6; cx.stroke();
+    cx.fillStyle="#2F3A2F"; cx.font="11px Verdana,sans-serif"; cx.textAlign="center";
+    cx.fillText(z.nombre, px+z.w/2, SUELO_Y-24); cx.textAlign="start";
+    if(Math.abs(estado.x+ROBOT_ANCHO/2 - (z.x+z.w/2)) < 56){
+      cx.fillStyle="#2F3A2F"; cx.font="11px Verdana,sans-serif"; cx.textAlign="center";
+      cx.fillText("pulsa 2", px+z.w/2, SUELO_Y-86); cx.textAlign="start";
+    }
+  });
+
+  /* personajes que esperan junto a cada aviso */
+  m.disparadores.forEach(function(d,i){
+    if(d.usado) return;
+    const px = d.x - cam;
+    if(px < -70 || px > anchoVista+70) return;
+    const quien = estado.colaEventos[0] ? estado.colaEventos[0].quien : "Woody";
+    dibujarPersonaje(quien, px+30, SUELO_Y);
+    rectLapiz(px+4, SUELO_Y-96, 54, 24, "#FBF8F2", "#3A9B4C", 2.4, i*11);
+    cx.fillStyle="#3A9B4C"; cx.font="14px Verdana,sans-serif"; cx.textAlign="center";
+    cx.fillText("!", px+31, SUELO_Y-79); cx.textAlign="start";
+  });
+
+  /* bandera del final */
+  const bx = m.bandera.x - cam;
+  if(bx > -60 && bx < anchoVista+60){
+    cx.strokeStyle="#5E4A2E"; cx.lineWidth=5; cx.lineCap="round";
+    cx.beginPath(); cx.moveTo(bx, SUELO_Y); cx.lineTo(bx, SUELO_Y-140); cx.stroke();
+    const alturaBandera = m.bandera.abajo ? SUELO_Y-40 : SUELO_Y-132;
+    cx.beginPath(); cx.moveTo(bx, alturaBandera); cx.lineTo(bx+46, alturaBandera+13); cx.lineTo(bx, alturaBandera+26);
+    cx.closePath();
+    cx.fillStyle = estado.estrellasNivel >= esc.eventos ? "#7BC47F" : "#E4736B";
+    cx.fill(); cx.strokeStyle="#3A9B4C"; cx.lineWidth=2.4; cx.stroke();
+    if(estado.estrellasNivel < esc.eventos){
+      cx.fillStyle="#2F3A2F"; cx.font="12px Verdana,sans-serif"; cx.textAlign="center";
+      cx.fillText("faltan "+(esc.eventos-estado.estrellasNivel)+" ★", bx+16, SUELO_Y-150);
+      cx.textAlign="start";
+    }
+  }
+
+  /* el robot */
+  const alto = estado.agachado ? ROBOT_ALTO_AGACHADO : ROBOT_ALTO;
+  dibujarRobot(estado.x - cam, estado.y + (ROBOT_ALTO-alto), alto, estado.agachado);
+
+  /* lluvia de lodo encima de todo */
+  dibujarLluvia();
+}
+
+/* ---------------------------------------------------------------------------
+   11. FÍSICA Y REGLAS
+   --------------------------------------------------------------------------- */
+let ultimoTic = 0;
+function haySueloEn(x){
+  const m = estado.mundo;
+  for(let i=0;i<m.huecos.length;i++){
+    const h = m.huecos[i];
+    if(x > h.x && x < h.x+h.w) return false;
+  }
+  return true;
+}
+
+function avanzar(dt){
+  const m = estado.mundo; if(!m) return;
+  const esc = m.esc;
+
+  /* mientras hay texto en pantalla, el mundo se detiene y la pila NO baja */
+  if(estado.pausadoPorTexto){
+    if(estado.lluviaActiva > 0) estado.lluviaActiva -= dt;
+    if(estado.brilloParaguas > 0) estado.brilloParaguas -= dt;
+    return;
+  }
+  if(!estado.jugando) return;
+
+  const vel = estado.embarrado ? VEL_EMBARRADO : VEL;
+  estado.agachado = teclas.abajo && estado.enSuelo;
+
+  if(!estado.agachado){
+    if(teclas.izq){ estado.vx = -vel; estado.mirando = -1; }
+    else if(teclas.der){ estado.vx = vel; estado.mirando = 1; }
+    else estado.vx *= 0.72;
+  }else{
+    estado.vx *= 0.5;
+  }
+
+  /* el dedo pulsa: el salto queda en cola unos cuadros por si llega temprano */
+  if(teclas.arriba) estado.buffer = BUFFER_CUADROS; else if(estado.buffer > 0) estado.buffer--;
+  /* despega si está en el suelo O si acaba de salirse del borde (coyote) */
+  if(estado.buffer > 0 && (estado.enSuelo || estado.coyote > 0) && !estado.agachado){
+    estado.vy = FUERZA_SALTO; estado.enSuelo = false;
+    estado.coyote = 0; estado.buffer = 0;
+    Sonido.saltar();
+  }
+
+  estado.vy += GRAV;
+  if(estado.vy > 16) estado.vy = 16;
+  estado.x += estado.vx;
+  estado.y += estado.vy;
+  if(estado.x < 0) estado.x = 0;
+  if(estado.x > m.largo-ROBOT_ANCHO) estado.x = m.largo-ROBOT_ANCHO;
+
+  const alto = estado.agachado ? ROBOT_ALTO_AGACHADO : ROBOT_ALTO;
+  const pies = estado.y + ROBOT_ALTO;
+  estado.enSuelo = false;
+
+  /* suelo */
+  const centroPies = estado.x + ROBOT_ANCHO/2;
+  if(estado.vy >= 0 && pies >= SUELO_Y && pies <= SUELO_Y+26 && haySueloEn(centroPies)){
+    estado.y = SUELO_Y - ROBOT_ALTO; estado.vy = 0; estado.enSuelo = true;
+    if(estado.x > estado.ultimoSeguro.x) estado.ultimoSeguro = {x:estado.x, y:estado.y};
+  }
+  /* plataformas */
+  m.plataformas.forEach(function(p){
+    if(estado.vy >= 0 &&
+       estado.x+ROBOT_ANCHO > p.x+4 && estado.x < p.x+p.w-4 &&
+       pies >= p.y && pies <= p.y+22){
+      estado.y = p.y - ROBOT_ALTO; estado.vy = 0; estado.enSuelo = true;
+    }
+  });
+  /* coyote: se recarga al pisar suelo y se gasta al quedarse sin él */
+  if(estado.enSuelo) estado.coyote = COYOTE_CUADROS;
+  else if(estado.coyote > 0) estado.coyote--;
+
+  /* cubos golpeados desde abajo */
+  m.cubos.forEach(function(c){
+    if(c.usado) return;
+    const cabeza = estado.y + (ROBOT_ALTO-alto);
+    if(estado.vy < 0 &&
+       estado.x+ROBOT_ANCHO > c.x+3 && estado.x < c.x+c.w-3 &&
+       cabeza <= c.y+c.h && cabeza >= c.y+c.h-20){
+      c.usado = true; estado.vy = 1.6;
+      estado.monedas += 2; Sonido.cubo(); Sonido.moneda();
+      actualizarMarcador(); avisar("+2 monedas");
+    }
+  });
+  /* monedas */
+  m.monedas.forEach(function(mo){
+    if(mo.tomada) return;
+    if(Math.abs(estado.x+ROBOT_ANCHO/2 - mo.x) < 22 && Math.abs(estado.y+ROBOT_ALTO/2 - mo.y) < 30){
+      mo.tomada = true; estado.monedas++; Sonido.moneda(); actualizarMarcador();
+    }
+  });
+  /* charcos: ensucian, no castigan */
+  if(estado.enSuelo && !estado.embarrado){
+    m.charcos.forEach(function(c){
+      if(centroPies > c.x && centroPies < c.x+c.w){
+        estado.embarrado = true; Sonido.lodo();
+        avisar("Te salpicó un charco — pasa por el baño");
+        actualizarMarcador();
+      }
+    });
+  }
+  /* caída por un hueco: Buzz la sube, sin perder nada */
+  if(estado.y > MUNDO_ALTO+40){
+    estado.x = estado.ultimoSeguro.x; estado.y = estado.ultimoSeguro.y;
+    estado.vy = 0; estado.vx = 0; Sonido.caer();
+    avisar("Buzz te subió de vuelta");
+  }
+
+  /* pila: baja solo cuando el mundo corre */
+  estado.pila -= dt * 0.0011 * (Math.abs(estado.vx) > 0.4 ? 1.5 : 0.6);
+  if(estado.pila <= 0){
+    estado.pila = 30;
+    Sonido.pilaBaja();
+    avisar("Rex te trajo una pila nueva");
+  }
+  actualizarPila();
+
+  /* cámara */
+  const objetivo = Math.max(0, Math.min(m.largo-anchoVista, estado.x - anchoVista*0.38));
+  estado.camara += (objetivo - estado.camara) * 0.12;
+
+  if(estado.lluviaActiva > 0) estado.lluviaActiva -= dt;
+  if(estado.brilloParaguas > 0) estado.brilloParaguas -= dt;
+
+  /* disparadores de vocabulario */
+  m.disparadores.forEach(function(d){
+    if(d.usado) return;
+    if(estado.x + ROBOT_ANCHO/2 >= d.x && estado.colaEventos.length){
+      d.usado = true;
+      const item = estado.colaEventos.shift();
+      eventoPalabra(item);
+    }
+  });
+
+  /* bandera */
+  if(estado.x + ROBOT_ANCHO/2 >= m.bandera.x && !m.bandera.abajo){
+    if(estado.estrellasNivel >= esc.eventos){
+      m.bandera.abajo = true;
+      Sonido.bandera();
+      terminarNivel();
+    }else if(estado.colaEventos.length){
+      /* la comprensión es la puerta: el aviso que falte ocurre aquí mismo */
+      const item = estado.colaEventos.shift();
+      eventoPalabra(item);
+    }else{
+      avisar("La bandera necesita estrellas, no monedas");
+    }
+  }
+}
+
+function bucle(t){
+  const dt = Math.min(48, t - (ultimoTic||t));
+  ultimoTic = t;
+  avanzar(dt);
+  pintar();
+  requestAnimationFrame(bucle);
+}
+
+/* ---------------------------------------------------------------------------
+   12. MARCADOR
+   --------------------------------------------------------------------------- */
+const elMonedas=document.getElementById("marcaMonedas"),
+      elEstrellas=document.getElementById("marcaEstrellas"),
+      elNivelNum=document.getElementById("marcaNivel"),
+      elEscena=document.getElementById("etiquetaEscena"),
+      elPila=document.getElementById("pilaRelleno");
+function actualizarMarcador(){
+  elMonedas.textContent = estado.monedas;
+  elEstrellas.textContent = estado.estrellas;
+  elNivelNum.textContent = estado.nivel;
+  elEscena.textContent = ESCENAS[estado.nivel-1].nombre + (estado.embarrado ? " · embarrada" : "");
+  actualizarPila();
+}
+function actualizarPila(){
+  const p = Math.max(0, Math.min(100, estado.pila));
+  elPila.style.width = p + "%";
+  elPila.classList.toggle("baja", p < 25);
+}
+
+/* ---------------------------------------------------------------------------
+   13. ZONAS: tienda, baño, ropa y color
+   --------------------------------------------------------------------------- */
+const panelZona=document.getElementById("panelZona"),
+      tituloZona=document.getElementById("tituloZona"),
+      articulosZona=document.getElementById("articulosZona");
+document.getElementById("cerrarZona").onclick = function(){
+  panelZona.classList.remove("visible"); estado.pausadoPorTexto = false;
+};
+
+function articulo(texto, precio, puede, alPulsar){
+  const b = document.createElement("button");
+  b.className = "articulo";
+  b.innerHTML = '<span>'+texto+'</span><span class="precio">'+(precio>0?precio+" ◍":"gratis")+'</span>';
+  b.disabled = !puede;
+  b.onclick = alPulsar;
+  articulosZona.appendChild(b);
+  return b;
+}
+
+function abrirZona(tipo){
+  estado.pausadoPorTexto = true;
+  panelZona.classList.add("visible");
+  articulosZona.innerHTML = "";
+  if(tipo === "tienda"){
+    tituloZona.textContent = "Tienda";
+    articulo("Pila llena", 4, estado.monedas>=4, function(){
+      estado.monedas -= 4; estado.pila = 100; Sonido.comprar(); actualizarMarcador(); abrirZona("tienda");
+    });
+    articulo("Galleta (media pila)", 2, estado.monedas>=2, function(){
+      estado.monedas -= 2; estado.pila = Math.min(100, estado.pila+50); Sonido.comprar(); actualizarMarcador(); abrirZona("tienda");
+    });
+  }else if(tipo === "bano"){
+    tituloZona.textContent = "Baño";
+    articulo(estado.embarrado ? "Quitar el lodo" : "Ya estás limpia", 3,
+      estado.embarrado && estado.monedas>=3, function(){
+      estado.monedas -= 3; estado.embarrado = false; Sonido.bano(); actualizarMarcador(); abrirZona("bano");
+    });
+  }else{
+    tituloZona.textContent = "Ropa y color";
+    [["Moño","moño"],["Gorra","gorra"],["Corona","corona"],["Sin nada",null]].forEach(function(par){
+      articulo(par[0], 2, estado.monedas>=2 || par[1]===null, function(){
+        if(par[1]!==null){ estado.monedas -= 2; }
+        estado.sombrero = par[1]; Sonido.comprar(); actualizarMarcador(); abrirZona("estilo");
+      });
+    });
+    [["Blanco","#F4F6F2"],["Menta","#CDEBD8"],["Durazno","#F7DCC6"],["Lila","#E2D4F0"]].forEach(function(par){
+      articulo("Pintar de "+par[0].toLowerCase(), 2, estado.monedas>=2, function(){
+        estado.monedas -= 2; estado.colorRobot = par[1]; Sonido.comprar(); actualizarMarcador(); abrirZona("estilo");
+      });
+    });
+  }
+}
+
+function zonaCerca(){
+  const m = estado.mundo; if(!m) return null;
+  const c = estado.x + ROBOT_ANCHO/2;
+  for(let i=0;i<m.zonas.length;i++){
+    const z = m.zonas[i];
+    if(Math.abs(c - (z.x+z.w/2)) < 56) return z;
+  }
+  return null;
+}
+
+/* ---------------------------------------------------------------------------
+   14. FLUJO DE NIVELES
+   --------------------------------------------------------------------------- */
+const pantallaPortada=document.getElementById("portada"),
+      pantallaNivel=document.getElementById("pantallaNivel"),
+      pantallaFinal=document.getElementById("pantallaFinal");
+
+function ocultarPantallas(){
+  [pantallaPortada,pantallaNivel,pantallaFinal].forEach(p=>p.classList.remove("visible"));
+}
+
+async function empezarNivel(n){
+  estado.nivel = n;
+  estado.mundo = construirNivel(n);
+  estado.colaEventos = palabrasDelNivel(n);
+  estado.estrellasNivel = 0;
+  estado.x = 60; estado.y = SUELO_Y-ROBOT_ALTO; estado.vx=0; estado.vy=0;
+  estado.camara = 0; estado.ultimoSeguro = {x:60,y:SUELO_Y-ROBOT_ALTO};
+  estado.lluviaActiva = 0; estado.apoyoVisible = null;
+  const esc = ESCENAS[n-1];
+  actualizarMarcador();
+  ocultarPantallas();
+  estado.jugando = true;
+
+  const quien = estado.colaEventos[0] ? estado.colaEventos[0].quien : "Woody";
+  await decir(quien, "Nivel "+n+": "+esc.nombre+". Voy a avisarte cómo está el cielo, pero con palabras que a lo mejor no conoces. Fíjate en el resto de la frase para decidir.");
+  if(esc.eventos > 0){
+    await decir("Mia", "Necesito "+esc.eventos+" estrella"+(esc.eventos>1?"s":"")+" para que baje la bandera. Las estrellas salen de entender, no de correr.");
+  }
+  guardar();
+}
+
+async function terminarNivel(){
+  estado.jugando = false;
+  const esc = ESCENAS[estado.nivel-1];
+  await decir("Jessie", "Bajó la bandera. Resolviste los "+esc.eventos+" avisos de "+esc.nombre+" leyendo la pista antes de decidir.");
+  if(estado.nivel >= 10){ mostrarFinal(); return; }
+  ocultarPantallas();
+  pantallaNivel.innerHTML =
+    '<h2>Nivel '+estado.nivel+' terminado</h2>'+
+    '<p>'+esc.nombre+'</p>'+
+    '<p>★ '+estado.estrellas+' estrellas · ◍ '+estado.monedas+' monedas</p>'+
+    '<p style="font-size:15px;opacity:.85">Sigue: '+ESCENAS[estado.nivel].nombre+'</p>'+
+    '<button class="botonGrande" id="botonSiguiente">Ir al nivel '+(estado.nivel+1)+'</button>';
+  pantallaNivel.classList.add("visible");
+  document.getElementById("botonSiguiente").onclick = function(){ empezarNivel(estado.nivel+1); };
+  guardar();
+}
+
+/* ---------------------------------------------------------------------------
+   15. MONITOREO DE CUMPLIMIENTO Y CRITERIO DE DOMINIO
+   Dominio: 8 de cada 10 palabras SIN apoyo pictórico acertadas al primer
+   intento. Se mide el primer intento, no el resultado después de reenseñar.
+   --------------------------------------------------------------------------- */
+function resumenDominio(){
+  const filas = Object.keys(estado.registro).map(k=>estado.registro[k]);
+  const sinApoyo = filas.filter(r=>!r.apoyo);
+  const aciertos = sinApoyo.filter(r=>r.aciertosPrimera>0).length;
+  const total = sinApoyo.length;
+  const porcentaje = total ? Math.round(aciertos*100/total) : 0;
+  return {filas, total, aciertos, porcentaje, logrado: total>=10 && porcentaje>=80};
+}
+
+function mostrarFinal(){
+  estado.jugando = false;
+  const d = resumenDominio();
+  let tabla = '<table id="tablaPalabras"><tr><th>Palabra</th><th>Al primer intento</th><th>Se repasó</th></tr>';
+  d.filas.forEach(function(r){
+    tabla += '<tr><td>'+r.palabra+'</td>'+
+             '<td class="'+(r.aciertosPrimera>0?"bienDicho":"aPracticar")+'">'+
+               (r.aciertosPrimera>0 ? "sí" : "no") + '</td>'+
+             '<td>'+(r.reensenada ? "sí" : "—")+'</td></tr>';
+  });
+  tabla += '</table>';
+  ocultarPantallas();
+  pantallaFinal.innerHTML =
+    '<h1>¡Llegaste al amanecer!</h1>'+
+    '<p>★ '+estado.estrellas+' estrellas · ◍ '+estado.monedas+' monedas</p>'+
+    '<h2>Palabras nuevas</h2>'+
+    '<p style="font-size:15px">Sin ningún dibujo de ayuda acertaste <b>'+d.aciertos+' de '+d.total+'</b> palabras a la primera ('+d.porcentaje+'%).</p>'+
+    '<p style="font-size:15px">'+(d.logrado
+      ? 'Criterio de dominio alcanzado: adivinas palabras nuevas usando solo el resto de la frase. Ese método sirve para cualquier libro.'
+      : 'Todavía falta para el criterio (8 de cada 10). Las palabras que salieron con «no» vuelven a aparecer si juegas otra vez: se resuelven volviendo a leer la pista, no adivinando.')+'</p>'+
+    tabla+
+    '<button class="botonGrande" id="botonOtraVez">Jugar otra vez</button>';
+  pantallaFinal.classList.add("visible");
+  document.getElementById("botonOtraVez").onclick = function(){ reiniciar(); };
+  guardar();
+}
+
+/* ---------------------------------------------------------------------------
+   16. GUARDADO (envuelto: si el navegador lo bloquea, el juego sigue igual)
+   --------------------------------------------------------------------------- */
+const LLAVE = "lluviaDeLodo.mia.v1";
+function guardar(){
+  try{
+    localStorage.setItem(LLAVE, JSON.stringify({
+      nivel:estado.nivel, monedas:estado.monedas, estrellas:estado.estrellas,
+      pila:estado.pila, embarrado:estado.embarrado, sombrero:estado.sombrero,
+      colorRobot:estado.colorRobot, registro:estado.registro,
+      reprogramados: estado.reprogramados.map(v=>v.id)
+    }));
+  }catch(e){}
+}
+function cargar(){
+  try{
+    const crudo = localStorage.getItem(LLAVE);
+    if(!crudo) return null;
+    return JSON.parse(crudo);
+  }catch(e){ return null; }
+}
+function aplicarGuardado(g){
+  estado.nivel = g.nivel||1; estado.monedas = g.monedas||0; estado.estrellas = g.estrellas||0;
+  estado.pila = typeof g.pila==="number" ? g.pila : 100;
+  estado.embarrado = !!g.embarrado; estado.sombrero = g.sombrero||null;
+  estado.colorRobot = g.colorRobot||"#F4F6F2";
+  estado.registro = g.registro||{};
+  estado.reprogramados = (g.reprogramados||[]).map(id=>VOCABULARIO.find(v=>v.id===id)).filter(Boolean);
+}
+function reiniciar(){
+  try{ localStorage.removeItem(LLAVE); }catch(e){}
+  estado.monedas=0; estado.estrellas=0; estado.pila=100; estado.embarrado=false;
+  estado.sombrero=null; estado.colorRobot="#F4F6F2"; estado.registro={}; estado.reprogramados=[];
+  empezarNivel(1);
+}
+
+/* ---------------------------------------------------------------------------
+   17. CONTROLES
+   --------------------------------------------------------------------------- */
+function ligarDireccion(id, campo){
+  const b = document.getElementById(id);
+  const pulsar = function(e){ e.preventDefault(); teclas[campo]=true; b.classList.add("presionado"); Sonido.activar(); };
+  const soltar = function(e){ if(e) e.preventDefault(); teclas[campo]=false; b.classList.remove("presionado"); };
+  b.addEventListener("touchstart", pulsar, {passive:false});
+  b.addEventListener("touchend", soltar, {passive:false});
+  b.addEventListener("touchcancel", soltar, {passive:false});
+  b.addEventListener("mousedown", pulsar);
+  b.addEventListener("mouseup", soltar);
+  b.addEventListener("mouseleave", soltar);
+  b.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ pulsar(e); } });
+  b.addEventListener("keyup", function(e){ if(e.key===" "||e.key==="Enter"){ soltar(e); } });
+}
+ligarDireccion("dirIzq","izq");
+ligarDireccion("dirDer","der");
+ligarDireccion("dirArriba","arriba");
+ligarDireccion("dirAbajo","abajo");
+
+const btn1=document.getElementById("btn1"), btn2=document.getElementById("btn2");
+btn1.addEventListener("touchstart", function(e){ e.preventDefault(); teclas.arriba=true; Sonido.activar(); }, {passive:false});
+btn1.addEventListener("touchend", function(e){ e.preventDefault(); teclas.arriba=false; }, {passive:false});
+btn1.addEventListener("mousedown", function(){ teclas.arriba=true; Sonido.activar(); });
+btn1.addEventListener("mouseup", function(){ teclas.arriba=false; });
+btn2.addEventListener("click", function(){
+  Sonido.activar();
+  const z = zonaCerca();
+  if(z && !estado.pausadoPorTexto) abrirZona(z.tipo);
+});
+
+document.addEventListener("keydown", function(e){
+  if(e.key==="ArrowLeft"){ teclas.izq=true; }
+  else if(e.key==="ArrowRight"){ teclas.der=true; }
+  else if(e.key==="ArrowUp"||e.key===" "){ teclas.arriba=true; e.preventDefault(); }
+  else if(e.key==="ArrowDown"){ teclas.abajo=true; }
+  else if(e.key==="2"){ const z=zonaCerca(); if(z && !estado.pausadoPorTexto) abrirZona(z.tipo); }
+  Sonido.activar();
+});
+document.addEventListener("keyup", function(e){
+  if(e.key==="ArrowLeft") teclas.izq=false;
+  else if(e.key==="ArrowRight") teclas.der=false;
+  else if(e.key==="ArrowUp"||e.key===" ") teclas.arriba=false;
+  else if(e.key==="ArrowDown") teclas.abajo=false;
+});
+
+const botonSilencio = document.getElementById("silencio");
+botonSilencio.onclick = function(){
+  const apagar = Voz.activa();
+  Voz.silenciar(apagar); Sonido.silenciar(apagar);
+  botonSilencio.textContent = apagar ? "🔇" : "🔊";
+};
+
+/* ---------------------------------------------------------------------------
+   18. ARRANQUE
+   --------------------------------------------------------------------------- */
+ajustarLienzo();
+actualizarMarcador();
+requestAnimationFrame(bucle);
+
+const guardado = cargar();
+if(guardado && guardado.nivel > 1){
+  const bs = document.getElementById("botonSeguirPartida");
+  bs.style.display = "";
+  bs.textContent = "Seguir en el nivel " + guardado.nivel;
+  bs.onclick = function(){ Sonido.activar(); aplicarGuardado(guardado); empezarNivel(guardado.nivel); };
+}
+document.getElementById("botonEmpezar").onclick = function(){
+  Sonido.activar();
+  reiniciar();
+};
+
+/* superficie para la auditoría y las pruebas */
+window.JUEGO = {
+  estado, VOCABULARIO, ESCENAS, REPASO, PERSONAJES,
+  construirNivel, palabrasDelNivel, eventoPalabra, resumenDominio,
+  decir, preguntar, empezarNivel, avanzar, pintar, abrirZona, zonaCerca,
+  Voz, Sonido, FILTRO_NOMBRE, teclas, RITMO,
+  constantes:{MUNDO_ALTO, SUELO_Y, GRAV, FUERZA_SALTO, VEL, ROBOT_ANCHO, ROBOT_ALTO}
+};
+</script>
+</body>
+</html>
