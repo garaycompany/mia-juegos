@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Los juegos de Mia</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#fffaf0;font-family:Verdana,"Trebuchet MS","Segoe UI",sans-serif;color:#1f2a44}
+main{max-width:560px;margin:0 auto;padding:24px 16px}
+h1{font-size:30px;text-align:center;margin:8px 0 20px}
+.juegos{display:grid;grid-template-columns:1fr;gap:14px}
+a.juego{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:#1f2a44;background:#fff;border:4px solid #e7dcc6;
+  border-radius:20px;padding:16px 18px;box-shadow:0 4px 0 rgba(31,42,68,.18);min-height:92px}
+a.juego:active{transform:translateY(2px)}
+a.juego b{font-size:22px}
+a.juego span{font-size:16px;color:#5b6785}
+@media (orientation:landscape){
+  main{max-width:1000px}
+  .juegos{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Los juegos de Mia</h1>
+  <div class="juegos">
+    <a class="juego" href="mia-lluvia-de-juguetes-v1.1.html"><b>La lluvia de juguetes</b><span>Atrapa lo que te piden y lleva la cuenta.</span></a>
+    <a class="juego" href="mia-escaner.html"><b>El escáner de Mia</b><span>Ver cuántos son sin contar uno por uno.</span></a>
+    <a class="juego" href="mia-lluvia-de-lodo.html"><b>Lluvia de lodo</b><span>Adivina las palabras nuevas por el resto de la frase.</span></a>
+    <a class="juego" href="mia-cuaderno-helado.html"><b>El cuaderno helado</b><span>Los meses y las fracciones, en tu cuaderno.</span></a>
+  </div>
+</main>
+</body>
+</html>
