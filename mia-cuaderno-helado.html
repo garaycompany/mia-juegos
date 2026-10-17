@@ -783,12 +783,13 @@ function nudillosSVG(){
 }
 
 function igualesSVG(){
-  return '<svg viewBox="0 0 230 130" role="img" aria-label="Cuatro figuras partidas en dos trozos">'+
+  return '<svg viewBox="0 0 270 142" role="img" aria-label="Cuatro figuras partidas en dos trozos">'+
   '<rect x="10" y="20" width="46" height="60" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="33" y1="20" x2="33" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="33" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">1</text>'+
   '<rect x="70" y="20" width="46" height="60" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="82" y1="20" x2="104" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="93" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">2</text>'+
-  '<circle cx="153" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="153" y1="20" x2="153" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="153" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">3</text>'+
-  '<circle cx="205" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="180" y1="34" x2="230" y2="34" stroke="#5b7f9e" stroke-width="2"/><text x="205" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">4</text>'+
-  '<text x="115" y="122" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">copia las cuatro y decide cuales tienen partes iguales</text></svg>';
+  '<circle cx="163" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="163" y1="20" x2="163" y2="80" stroke="#5b7f9e" stroke-width="2"/><text x="163" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">3</text>'+
+  '<circle cx="233" cy="50" r="30" fill="#eaf6ff" stroke="#5b7f9e" stroke-width="2"/><line x1="208" y1="34" x2="258" y2="34" stroke="#5b7f9e" stroke-width="2"/><text x="233" y="100" font-size="13" text-anchor="middle" fill="#2b3a4a" font-family="Verdana,sans-serif">4</text>'+
+  '<text x="135" y="120" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">copia las cuatro y decide</text>'+
+  '<text x="135" y="136" font-size="12" text-anchor="middle" fill="#6b7a8a" font-family="Verdana,sans-serif">cuales tienen partes iguales</text></svg>';
 }
 
 function mitadesSVG(){
@@ -893,8 +894,20 @@ const MODELOS = {
 /* ================= utilidades de render ================= */
 const app = document.getElementById("app");
 function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+/* Ningún dibujo se corta: si algo se sale del marco, el marco crece hasta abarcarlo. */
+function ajustarDibujos(raiz){
+  Array.prototype.forEach.call(raiz.querySelectorAll(".modelo svg"), function(s){
+    try{
+      const vb=s.viewBox.baseVal, bb=s.getBBox(), m=6;
+      const x0=Math.min(vb.x, bb.x-m), y0=Math.min(vb.y, bb.y-m);
+      const x1=Math.max(vb.x+vb.width, bb.x+bb.width+m), y1=Math.max(vb.y+vb.height, bb.y+bb.height+m);
+      s.setAttribute("viewBox", [x0,y0,x1-x0,y1-y0].map(function(n){ return Math.round(n*10)/10; }).join(" "));
+    }catch(e){}
+  });
+}
 function pinta(html, decir){
   app.innerHTML = '<div class="aparece">'+html+'</div>';
+  ajustarDibujos(app);
   window.scrollTo(0,0);
   if(decir) hablar(decir);
 }
@@ -943,7 +956,7 @@ function vistaMenu(){
     '<div class="rutas"><button class="btn" id="r1">Ruta del año · los meses</button>'+
     '<button class="btn" id="r2">Ruta del hielo · las fracciones</button></div>'+
     botonesVoz()+
-    '<div class="pie">v1.1 · hecho para Mia</div>', decir);
+    '<div class="pie">v1.2 · hecho para Mia</div>', decir);
   document.getElementById("r1").onclick=function(){ S.ruta="anio"; S.vista="mapa"; render(); };
   document.getElementById("r2").onclick=function(){ S.ruta="fracciones"; S.vista="mapa"; render(); };
   conectaVoz(decir);
