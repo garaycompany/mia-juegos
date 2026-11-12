@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Voz grabada (MP3): el Echo Show no suena con la voz del navegador. Va antes del juego. -->
+<script src="audio-comun/manifiesto.js"></script>
+<script src="audio-comun/voz-mia.js"></script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>El escáner de Mia — Ver sin contar</title>
@@ -320,7 +324,7 @@
 /* Versión del juego. Se sube a mano en cada actualización real del contenido;
    el candado de entrega la usa para nombrar el archivo y se niega a entregar
    contenido nuevo con una versión ya usada. */
-const VERSION='5.2';
+const VERSION='5.3';
 
 /* ---------------------- SONIDO ---------------------- */
 const Audio_ = {

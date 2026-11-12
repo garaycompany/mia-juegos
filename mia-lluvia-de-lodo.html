@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Voz grabada (MP3): el Echo Show no suena con la voz del navegador. Va antes del juego. -->
+<script src="audio-comun/manifiesto.js"></script>
+<script src="audio-comun/voz-mia.js"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Lluvia de lodo — el robot de Mia</title>
@@ -266,7 +270,7 @@ canvas#lienzo{position:absolute;inset:0;width:100%;height:100%;display:block}
     </div>
     <div class="ficha" id="nivelCaja">
       <span id="marcaNivel">1</span>
-      <span id="etiquetaEscena">El jardin de Mia</span>
+      <span id="etiquetaEscena">El jardín de Mia</span>
     </div>
   </div>
 
@@ -309,8 +313,8 @@ canvas#lienzo{position:absolute;inset:0;width:100%;height:100%;display:block}
   <div class="pantalla visible" id="portada">
     <h1>Lluvia de lodo</h1>
     <h2>El robot de Mia</h2>
-    <p>Tiro al Blanco y los amigos avisan como esta el cielo. Pero usan <b>palabras nuevas</b>.</p>
-    <p>Mia tiene que <b>adivinar por el resto de la frase</b> que significan: si anuncian lodo, agachate con el paraguas. Si anuncian buen tiempo, sigue corriendo.</p>
+    <p>Tiro al Blanco y los amigos avisan cómo está el cielo. Pero usan <b>palabras nuevas</b>.</p>
+    <p>Mia tiene que <b>adivinar por el resto de la frase</b> qué significan: si anuncian lodo, agáchate con el paraguas. Si anuncian buen tiempo, sigue corriendo.</p>
     <p style="font-size:14px;opacity:.8">Monedas = correr y saltar. Estrellas = entender. La banderita solo baja con estrellas.</p>
     <button class="botonGrande" id="botonEmpezar">Empezar</button>
     <button class="botonGrande secundario" id="botonSeguirPartida" style="display:none">Seguir donde iba</button>
